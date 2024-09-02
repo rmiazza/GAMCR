@@ -1,4 +1,4 @@
-<img src="https://github.com/quentin-duchemin/scClone2DR/blob/main/img/logo.png?raw=true" width="1000" alt="scClone2DR">
+<img src="https://github.com/quentin-duchemin/GAMCR/blob/main/img/logo.png?raw=true" width="1000" alt="GAMCR">
 
 
 # Basic installation
