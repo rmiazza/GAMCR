@@ -1,4 +1,4 @@
-<img src="https://github.com/quentin-duchemin/GAMCR/blob/main/docs/source/_static/logo.png?raw=true" width="1000" alt="GAMCR">
+<img src="https://github.com/quentin-duchemin/GAMCR/blob/main/docs/source/_static/gamcr_readme.png?raw=true" width="100" alt="GAMCR">
 
 
 # Basic installation
