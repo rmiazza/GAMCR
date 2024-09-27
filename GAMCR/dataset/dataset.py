@@ -24,16 +24,18 @@ class Dataset():
         self.init = max([np.max(self.features['p']), np.max(self.features['pet'])])
         self.gam = DataGAM(self.L, n_splines=n_splines, lam=lam)
 
-    def load_model(self, path_model):
+    def load_model(self, path_model, lam=None):
         with open(path_model, 'rb') as handle:
             params = pickle.load(handle)
+        if lam is None:
+            lam = params['gam']['lam']
         self.m = params['m']
         self.compute_spline_basis()
         self.L = self.basis_splines.shape[0]
         self.init = params['init']
         self.features = params['features']
         self.feature_names = params['feature_names']
-        self.gam = DataGAM(self.L, n_splines=params['gam']['n_splines'], lam=params['gam']['lam'])
+        self.gam = DataGAM(self.L, n_splines=params['gam']['n_splines'], lam=lam)
         self.gam.init_gam_from_knots(params['gam']['edge_knots_'], params['gam']['m_features'], coeffs=params['gam'].get('coeffs', None))
         
     def save_model_parameters(self, save_folder, name='', add_dic={}):
@@ -233,9 +235,14 @@ class Dataset():
             matJ[i-m-init,:,:] =  np.sum(vec[None,:,None] * self.basis_splines[:,:,None] * mat[None,:,:], axis=1)
         return matJ
 
-    def load_data(self, save_folder, max_files=100):
+    def load_data(self, save_folder, max_files=100, test_mode=False):
         id_sub_files = np.sort(np.array([name[5:-4] for name in os.listdir(save_folder) if ('matJ' in name)]).astype(int))
-        for ite, id_file in enumerate(id_sub_files[:max_files]):
+
+        if test_mode:
+            id_files_2_load = id_sub_files[-max_files:]
+        else:
+            id_files_2_load = id_sub_files[:max_files]
+        for ite, id_file in enumerate(id_files_2_load):
             if ite==0:
                 X = np.load(os.path.join(save_folder,'X_{0}.npy'.format(id_file)))
                 matJ = np.load(os.path.join(save_folder,'matJ_{0}.npy'.format(id_file)))

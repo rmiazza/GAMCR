@@ -5,17 +5,22 @@ from copy import deepcopy
 from tqdm import tqdm
 import numpy as np
 import os
+from ..utils import build_custom_matrix
 
 
 def ReLU(x, delta=1e-3):
     return (np.maximum(0,x) + delta*(x<0))
 
 
+
+
+
+
 class Trainer():
     def __init__(self):
         pass
         
-    def trainer(self, ls_X, ls_modelmat, Y, dates=None,  lr=1e-3, max_iter=200, warm_start=False, save_folder=None, name_model='', normalization_loss=1):
+    def trainer(self, ls_X, ls_modelmat, Y, dates=None,  lr=1e-3, max_iter=200, warm_start=False,  save_folder=None, name_model='', normalization_loss=1, lam_global=0):
         from collections import defaultdict
         import scipy as sp
         import scipy
@@ -77,16 +82,23 @@ class Trainer():
                 gam.coef_
             ).all(), "coefficients should be well-behaved, but found: {}".format(gam.coef_)
         ls_P = []
-        for gam in self.gam.pygams:
+        for l, gam in enumerate(self.gam.pygams):
             ls_P.append(gam._P().A)
             #ls_S.append(sp.sparse.diags(np.ones(m) * np.sqrt(EPS)))  # improve condition
         # S += gam._H # add any user-chosen minumum penalty to the diagonal
         S = sp.sparse.diags(np.ones(m) * np.sqrt(EPS))
         P = scipy.linalg.block_diag(*ls_P)
         print(P.shape, S.shape)
+
+        a = np.mean(self.gam._modelmat(ls_X[0]), axis=0)
+        smooth_P = np.kron( build_custom_matrix(self.L), np.dot(a.reshape(-1,1), a.reshape(1,-1)) )
+
+
+        # + 0.0001*n*smooth_P
         # if we dont have any constraints, then do cholesky now
         self.gam.pygams[0].statistics_['m_features'] = ls_X[0].shape[1] * len(self.gam.pygams)
-        E = self.gam.pygams[0]._cholesky(S + P, sparse=False, verbose=self.gam.pygams[0].verbose)
+        #E = self.gam.pygams[0]._cholesky(S + n*P + lam_global*n*smooth_P, sparse=False, verbose=self.gam.pygams[0].verbose)
+        E = self.gam.pygams[0]._cholesky(S + n*P + n*lam_global*smooth_P, sparse=False, verbose=self.gam.pygams[0].verbose)
         self.gam.pygams[0].statistics_['m_features'] = ls_X[0].shape[1]
         print(self.gam.pygams[0].terms.get_coef_indices(-1))
         min_n_m = np.min([m, n])
@@ -117,7 +129,7 @@ class Trainer():
         WB = modelmat  # common matrix product
     
         if not(warm_start):
-            Q, R = np.linalg.qr(WB)
+            Q, R = np.linalg.qr(WB) 
         
             if not np.isfinite(Q).all() or not np.isfinite(R).all():
                 raise ValueError(
@@ -139,12 +151,14 @@ class Trainer():
         
             # update coefficients
             B = Vt.T.dot(Dinv).dot(U1.T).dot(Q.T)
-    
-    
-        Q = (WB.T).dot(WB) / normalization_loss + S + P
+
+
+        normalization_loss = n
+        Q = (WB.T).dot(WB) / normalization_loss + S + P +  lam_global*smooth_P
         q = (WB.T).dot(pseudo_data) / normalization_loss 
         loss = []
-        for ite in tqdm(range(max_iter)):   
+        for ite in tqdm(range(max_iter)):
+            
             if ite!= 0:
                 coef_old = deepcopy(coef_new)
             
@@ -155,10 +169,11 @@ class Trainer():
                     coef_new = ReLU(coef_new, delta=0)
                 else:
                     coef_new = self.gam.get_coeffs().reshape(-1)
+                    
             else:
                 #grad = ( (WB.T).dot(WB)+S+P ).dot(coef_new) - (WB.T).dot(pseudo_data) # - (1/t) /(coef_new+epsilon)
                 grad = ( Q ).dot(coef_new) - q # - (1/t) /(coef_new+epsilon)
-                coef_new = coef_new - lr * grad / n
+                coef_new = coef_new - lr * grad 
                 coef_new = np.array(coef_new).ravel()
                 coef_new = ReLU(coef_new, delta=0)
                 

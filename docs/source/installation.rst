@@ -6,7 +6,7 @@ Installation
 Prerequisites
 ~~~~~~~~~~~~~~
 
-scClone2DR is a Python package allowing to learn reponse to different treatments of tumor at the subclonal resolution. In the following, we describe the steps to follow to get a correct environment to use our package.
+GAMCR is a Python package allowing to learn reponse to different treatments of tumor at the subclonal resolution. In the following, we describe the steps to follow to get a correct environment to use our package.
 
 conda prerequisites
 ###################
@@ -15,11 +15,11 @@ conda prerequisites
 
 2. Create a new conda environment::
 
-    conda create -n scclone2dr-env python=3.7
+    conda create -n gamcr-env python=3.7
 
 3. Activate your environment::
 
-    source activate scclone2dr-env
+    source activate gamcr-env
 
 python prerequisites
 ####################
@@ -38,7 +38,7 @@ Downloading the package
 
 1. clone the repository::
 	
-	git clone https://github.com/quentin-duchemin/scClone2DR.git
+	git clone https://github.com/quentin-duchemin/GAMCR.git
 
 
 2. install the required python packages in the virtualenv::

@@ -1,11 +1,11 @@
 Tutorials
 ==========
 
-The easiest way to get familiar with scClone2DR package is to follow along with our tutorials. Note all the notebooks below should be naturally studied in the following order: from left to right and from top to bottom.
+The easiest way to get familiar with the GAMCR package is to follow along with our tutorials. Note all the notebooks below should be naturally studied in the following order: from left to right and from top to bottom.
 
 
 .. nbgallery::
-	notebooks/quickstart-on-simulated-data
-	notebooks/integration-multiomics
-	notebooks/drug-response-data
-	notebooks/real-data
+	notebooks/generating-simulated-data
+	notebooks/preprocessing-the-data
+	notebooks/running-the-model
+	notebooks/visualizing-results

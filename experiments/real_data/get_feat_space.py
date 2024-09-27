@@ -2,28 +2,15 @@ import numpy as np
 import pandas as pd
 import os
 
-GISID_GOOD_SITES = pd.read_csv('/mydata/watres/quentin/code/FLOW/hourly_analysis/splimodel/sites_damseffect_WBgood_coords.csv', encoding = "ISO-8859-1")['ID_GIS_gag'].to_numpy()
+# GISID_GOOD_SITES = pd.read_csv('/mydata/watres/quentin/code/FLOW/hourly_analysis/splimodel/sites_damseffect_WBgood_coords.csv', encoding = "ISO-8859-1")['ID_GIS_gag'].to_numpy()
 
-GISID_GOOD_SITES_str = [str(el) for el in GISID_GOOD_SITES]
+# GISID_GOOD_SITES_str = [str(el) for el in GISID_GOOD_SITES]
 
 def get_feat_space(all_GISID=None, get_df=False, normalize=False):
     path_daily = '/mydata/watres/quentin/code/FLOW/data/Daily_Data/'
     path = '/mydata/watres/quentin/code/FLOW/data/'
     file_catchprop = 'CH_Catchments_Geodata_MF_20221209.csv'
     os.chdir(path)
-    
-    pathdata = '/mydata/watres/quentin/code/FLOW/data/GISID2data/'
-    
-    folder = '/mydata/watres/quentin/code/FLOW/hourly_analysis/save_transfer_functions/'
-    files = os.listdir(folder)
-    files = np.array(files)
-    idxs = np.where(['posterior_transfer' in file for file in files])
-    files = files[idxs]
-    
-    # GISID of catchments for which we have computed the transfer functions
-    ls_catchments = [int(file[:-23]) for file in files]
-    n_catchments = len(ls_catchments)
-    
     df = pd.read_csv(path+file_catchprop, header=None,  engine='python')
     
     data_type = df.iloc[0,:]
@@ -61,7 +48,6 @@ def get_feat_space(all_GISID=None, get_df=False, normalize=False):
             features2idxcategory[feature] = i
     df.columns = IDs
     
-    #print(df.loc[df['GIS_ID']=='105'][['H_MIN']])
     
     
     df_catchment_names = df[list(IDs[:5])+['H_MIN','H_MAX', 'H_MEAN']]#df[list(IDs[:5])]
@@ -74,13 +60,6 @@ def get_feat_space(all_GISID=None, get_df=False, normalize=False):
     
     df_data = df.iloc[:,4:]
     df_data = df_data.drop(df_data.columns[[3, 4]],axis = 1)
-    
-    
-    df_catchment_names['catchment_name'] = df_catchment_names['Betreiber'].astype(str) +"-"+ df_catchment_names["org_ID"]
-    df_catchment_names.index = range(len(df_catchment_names['catchment_name']))
-    
-    df_data = df_data.filter(items = np.array(ls_catchments).astype(str), axis=0)
-    df_data.head()
     
     
     cols = list(df_data.columns)

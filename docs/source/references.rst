@@ -1,11 +1,10 @@
 References
 ----------
 
-.. [Ferreira2022] P.F. Ferreira, J. Kuipers, N. Beerenwinkel (2022),
-   *Mapping single-cell transcriptomes to copy number evolutionary trees*,
-   `Research in Computational Molecular Biology`.
-   
-.. [Engelmann2024] J.P.Engelmann, A.Palma, J.M.Tomczak, F.J.Theis, F.P.Casale (2024),
-   *Mixed Models with Multiple Instance Learning*, 
-   `AISTATS`.
+.. [Kirchner2022] Kirchner, J.W. (2022). 
+   *Impulse response functions for nonlinear, nonstationary, and heterogeneous systems, estimated by deconvolution and demixing of noisy time series.*
+    `Sensors (Basel, Switzerland), 22(9), 3291.`
 
+.. [Kirchner2024] Kirchner, J.W. (2024). 
+   *Characterizing nonlinear, nonstationary, and heterogeneous hydrologic behavior using Ensemble Rainfall-Runoff Analysis (ERRA): proof of concept*
+    

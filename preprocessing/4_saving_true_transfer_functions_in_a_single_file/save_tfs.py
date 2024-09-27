@@ -25,7 +25,7 @@ for station in ['Pully', 'Lugano']:
                 dates.append(dfp.loc[0,'t'])
             except:
                 pass
-        transfer = np.array(transfer[:-1])
+        transfer = np.array(transfer)
         dates = np.array(dates)
         np.save(folder+'/lst_transfer.npy', np.array(lst_transfer))
         np.save(folder+'/transfer.npy', np.array(transfer))
