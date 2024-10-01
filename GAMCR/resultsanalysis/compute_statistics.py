@@ -9,10 +9,41 @@ from tqdm import tqdm
 
 
 class ComputeStatistics():
+    """
+    Class allowing to compute different statistics from the trained model.
+
+    ...
+    
+    Methods
+    -------
+    compute_statistics(site_folder, site, nblocks = 4, min_precip = 1, groups_wetness=None, groups_precip=None, max_files=20, normalization_streamflow=1)
+         compute some statistics on the predicted transfer functions
+    """
     def __init__(self):
         pass
 
-    def compute_statistics(self, site_folder, site, nblocks = 4, min_precip = 1, groups_wetness=None, groups_precip=None, max_files=20):
+    def compute_statistics(self, site_folder, site, nblocks = 4, min_precip = 1, groups_wetness=None, groups_precip=None, max_files=20, normalization_streamflow=1):
+        """Compute different information on the learned transfer functions, such as: - the global average NRD/RDD - the average NRF/RRD over some ensembles (you can stratify either by precipitation intensity, antecendent wetness or by both) - the area, mean, peak and peak lag of the transfer function over different ensembles for the precipitation intensity.
+
+        Parameters
+        ----------
+        site_folder : str
+            Path of the folder corresponding to the site
+        site : str
+            Name of the site
+        nblocks : int
+            If groups_wetness or groups_precip are None, then we use 'nblocks' ensembles to averaged the learned transfer functions (stratifting by both antecent wetness and precipitation intensity) 
+        min_precip : int
+            Minimum precipitation intensity considered to define an event
+        groups_wetness : dic
+            Define the lower and upper values of the ensembles considered to stratify with respect to the antecedent wetness
+        groups_precip : dic
+            Define the lower and upper values of the ensembles considered to stratify with respect to precipitation intensity
+        max_files : int
+            Maximum number of files loaded to compute the statistics (among the ones saved when preprocessing the data using one of the "save_batch" type method
+        normalization_streamflow : positive float
+            Normalization vector to apply on the loaded streamflow time series (typically to go from cubic meter per second to mm per hour).
+        """
         import pickle
         save_folder = os.path.join(site_folder, 'results')
         if not os.path.exists(save_folder):
@@ -21,11 +52,17 @@ class ComputeStatistics():
 
         data_folder = os.path.join(site_folder, 'data')
         X, matJ, y, timeyear, dates = self.load_data(data_folder, max_files=max_files)
+
+        y = y/normalization_streamflow
         
         idx_precip_intensity = int(0)
         
         gamcoeffs = self.gam.get_coeffs()
         H = self.predict_transfer_function(X)
+
+        yhat = self.predict_streamflow(matJ)
+        np.save(os.path.join(save_folder, 'predicted_streamflow.npy'), yhat)
+        np.save(os.path.join(save_folder, 'timeyear.npy'), timeyear)
         
         tpos = np.where(X[:,idx_precip_intensity]>min_precip)[0]
         p_sorted = np.sort(X[:,idx_precip_intensity][tpos])

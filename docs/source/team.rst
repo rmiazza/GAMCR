@@ -19,7 +19,7 @@ Team
                 <div class="col-12 text-center">
                     <div class="section-title mb-4 pb-2">
                         <h4 class="title mb-4">History of the Project</h4>
-                        <p class="text-muted para-desc mx-auto mb-0">scClone2DR was started at the Swiss Data Science Center at EPFL. The goal was to design a predictive model for drug response at the subclonal level from singel cell omics data.</p>
+                        <p class="text-muted para-desc mx-auto mb-0">GAMCR was started at the Swiss Data Science Center at EPFL. The goal was to design a data-driven model to predict the response of watersheds to different precipitation events.</p>
                     </div>
                 </div><!--end col-->
             </div><!--end row-->
@@ -54,7 +54,6 @@ Team
                 </div><!--end col-->            
             
 
-            <div class="row">
                 <div class="col-lg-3 col-md-6 col-9 mt-4 pt-2">
                     <div class="team text-center rounded p-3 py-4">
                         <img src="https://scholar.googleusercontent.com/citations?view_op=medium_photo&user=xSkCtK8AAAAJ&citpid=6" class="img-fluid avatar avatar-medium shadow rounded-pill" alt="">

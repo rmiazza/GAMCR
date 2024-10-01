@@ -17,15 +17,16 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'scClone2DR'
-copyright = '2024, Q.Duchemin, D.Trejo Banos, R.Schill, A.Bertolini, F.Singer, G.Obozinski and J.Kuipers'
-author = 'Q.Duchemin, D.Trejo Banos, R.Schill, A.Bertolini, F.Singer, G.Obozinski and J.Kuipers'
+project = 'GAMCR'
+copyright = '2024, Q.Duchemin, M.G.Zanoni, G.Obozinski, J.Kirchner and P.Benettin'
+author = 'Q.Duchemin, M.G.Zanoni, G.Obozinski, J.Kirchner and P.Benettin'
 
 # The full version, including alpha/beta/rc tags
 release = '1'
 
 import sys
 from pathlib import Path
+
 
 
 HERE = Path(__file__).parent
@@ -63,6 +64,7 @@ extensions = [
 ]
 
 
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 source_suffix = ['.rst','.md']
@@ -86,8 +88,7 @@ intersphinx_mapping = dict(
     python=("https://docs.python.org/3", None),
     scipy=("https://docs.scipy.org/doc/scipy/reference/", None),
     sklearn=("https://scikit-learn.org/stable/", None),
-    torch=("https://pytorch.org/docs/master/", None),
-    scanpy=("https://scanpy.readthedocs.io/en/stable/", None),
+    torch= ('https://pytorch.org/docs/stable/', None),
     pytorch_lightning=("https://pytorch-lightning.readthedocs.io/en/stable/", None),
     pyro=("http://docs.pyro.ai/en/stable/", None),
 )
@@ -114,10 +115,10 @@ html_title = "GAMCR"
 html_logo = "_static/logo.png"
 
 nbsphinx_thumbnails = {
-    "tutorials/notebooks/real-data": "_static/tutorials/real-data.png",
-    "tutorials/notebooks/integration-multiomics": "_static/tutorials/rna.png",
-    "tutorials/notebooks/quickstart-on-simulated-data": "_static/tutorials/quickstart-on-simulated-data.png",
-    "tutorials/notebooks/drug-response-data": "_static/tutorials/drug.png",
+    "tutorials/notebooks/generating-simulated-data": "_static/tutorials/simulated_data.png",
+    "tutorials/notebooks/visualizing-results": "_static/tutorials/nb_visualization.png",
+    "tutorials/notebooks/running-the-model": "_static/tutorials/quickstart-on-simulated-data.png",
+    "tutorials/notebooks/real-data": "_static/tutorials/regu_path_cat_zoom.png",
 }
 
 
@@ -142,6 +143,8 @@ myst_enable_extensions = [
 myst_url_schemes = ("http", "https", "mailto")
 nb_output_stderr = "remove"
 nb_execution_mode = "off"
+nbsphinx_execute = 'never'
+
 nb_merge_streams = True
 typehints_defaults = "braces"
 

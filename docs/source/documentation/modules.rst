@@ -1,7 +1,7 @@
-scClone2DR
-==========
+GAMCR
+=====
 
 .. toctree::
    :maxdepth: 4
 
-   scClone2DR
+   GAMCR

@@ -12,6 +12,43 @@ from copy import deepcopy
 import os
 
 class Dataset():
+    """
+    A class used to preprocess, load and save data and models
+
+    ...
+
+    Attributes
+    ----------
+    max_lag : int
+        maximum lag time consider for the transfer functions
+    features : dic
+        dictionary of the different features used in the model
+    n_splines : int
+        number of splines considered for a GAM
+    lam : positive float
+        regularization parameter related to the smoothing penalty in the GAM
+
+    Methods
+    -------
+    load_model(path_model, lam=None)
+        Load the model saved in the file with path: path_model
+    save_model_parameters(save_folder, name='', add_dic={})
+        Save the model parameters
+    save_batch_common_GAM(allGISID, save_folder, ntest=0, nstart=0, nfiles=40)
+        Preprocess and save the data. It makes sure to use the same knots for the GAMs for the different sites.
+    save_batch( save_folder, datafile, nstart=0, nfiles=100)
+        Preprocess and save the data.
+    get_fluxes(datafile, nstart=0, ntest=0, size_time_window=None)
+        Load the data and get the PET, precipitation, dates and streamflow time series. This method is called by the 'save_batch' type methods.
+    get_design(pet, x, y, dates)
+        Compute the design matrix of the GAMs. This method is called by the 'save_batch' type methods.
+    get_GAMdesign(X, J)
+        Compute the matrix that is used in the convolution to get the streamflow values.
+    load_data(save_folder, max_files=100, test_mode=False)
+        Load the data that has been already proprecessed and saved using one of the 'save_batch' type methods.
+    compute_spline_basis(show_splines = False)
+        Compute the basis functions (B-splines) one which we decompose the transfer functions.
+    """
     def __init__(self, max_lag=24*30*2, features={}, n_splines=10,  lam=10):
         self.m = max_lag
         self.compute_spline_basis()
@@ -25,6 +62,15 @@ class Dataset():
         self.gam = DataGAM(self.L, n_splines=n_splines, lam=lam)
 
     def load_model(self, path_model, lam=None):
+        """Load the model saved in the file with path: path_model
+
+        Parameters
+        ----------
+        path_model : str
+            The location of the file where the model has been saved
+        lam : positive float, optional
+            Regularization parameter for the smoothing penalty used when fitting the GAM
+        """
         with open(path_model, 'rb') as handle:
             params = pickle.load(handle)
         if lam is None:
@@ -54,6 +100,23 @@ class Dataset():
                 pickle.dump(params, handle, protocol=pickle.HIGHEST_PROTOCOL)
                 
     def save_batch_common_GAM(self, allGISID, save_folder, ntest=0, nstart=0, nfiles=40):
+        """Preprocess and save the data for all sites in allGISID.
+        
+        It makes sure to use the same knots for the GAMs for the different sites. This was needed in our paper when trying to fit a model predicting model coefficients from catchment's features. Otherwise, coefficients learned at different sites would not correspond to the same quantities.
+
+        Parameters
+        ----------
+        allGISID : list
+            List of the names of the sites
+        save_folder : str
+            Path where we can find a folder '{site}' for all '{site}' in allGISID. In this folder, the .txt file with the data at the corresponding site should be saved.
+        ntest : int, optional
+            Number of more recent time points that should be discarded.
+        nstart : int, optional
+            Number of older time points that should be discarded.
+        nfiles : int, optional
+            The preprocessed data will be splitted and saved in different files (to potentially speed up the loading process of the data if only some fraction of the total dataset is needed). This integer specifies the number of files used to split the data.
+        """
         init = self.init
         m = self.m
         common_edge_knots = None
@@ -114,6 +177,17 @@ class Dataset():
             self.save_model_parameters(path)
 
     def save_batch(self, save_folder, datafile, nstart=0, nfiles=100):
+        """Preprocess and save the data for all sites in allGISID.
+        
+        Parameters
+        ----------
+        save_folder : str
+            Path where we can find a folder '{site}' for the site under study. In this folder, the .txt file with the data at the corresponding site should be saved.
+        nstart : int, optional
+            Number of older time points that should be discarded.
+        nfiles : int, optional
+            The preprocessed data will be splitted and saved in different files (to potentially speed up the loading process of the data if only some fraction of the total dataset is needed). This integer specifies the number of files used to split the data.
+        """
         init = self.init
         m = self.m
         import os
@@ -140,6 +214,15 @@ class Dataset():
         self.save_model_parameters(save_folder)
     
     def get_fluxes(self, datafile, nstart=0, ntest=0, size_time_window=None):
+        """Load the data and get the PET, precipitation, dates and streamflow time series. This method is called by the 'save_batch' type methods.
+        
+        Parameters
+        ----------
+        datafile : str
+            Path of the .txt file with the data at the corresponding site.
+        nstart : int, optional
+            Number of older time points that should be discarded.
+        """
         df = pd.read_csv(datafile)
         df = df.fillna(0)
         x = df['p'].to_numpy()
@@ -170,6 +253,19 @@ class Dataset():
         return pet_train, x_train, y_train, dates_train, timeyear_train, pet_test, x_test, y_test, dates_test, timeyear_test
 
     def get_design(self, pet, x, y, dates):
+        """Compute the matrix that is used in the convolution to get the streamflow values.
+        
+        Parameters
+        ----------
+        pet : array
+            Potential evapotranspiration.
+        x : array
+            Precipitation time series.
+        y : array
+            Streamflow time series.
+        dates : array
+            Time series with dates.
+        """
         m = self.m
         init = self.init
         nfeat = self.basis_splines.shape[0]
@@ -222,6 +318,15 @@ class Dataset():
         
 
     def get_GAMdesign(self, X, J):
+        """Compute the matrix that is used in the convolution to get the streamflow values.
+        
+        Parameters
+        ----------
+        X : array
+            Design matrix of the GAM compute from the method 'get_design'. X has dimension: number of timepoints x number of features
+        J : array
+            Precipitation time series.
+        """
         m = self.m
         init = self.init
         nfeat = self.basis_splines.shape[0]
@@ -236,6 +341,17 @@ class Dataset():
         return matJ
 
     def load_data(self, save_folder, max_files=100, test_mode=False):
+        """Load the data that has been already proprecessed and saved using one of the 'save_batch' type methods.
+        
+        Parameters
+        ----------
+        save_folder : str
+            Path of the folder where the data is stored.
+        max_files : int
+            Total number of files among the ones saved by the 'save_batch' type method to load.
+        test_mode : bool
+            If False, the oldest data will be loaded. Otherwise, the more recent one is loaded.
+        """
         id_sub_files = np.sort(np.array([name[5:-4] for name in os.listdir(save_folder) if ('matJ' in name)]).astype(int))
 
         if test_mode:
@@ -265,6 +381,13 @@ class Dataset():
         return X, matJ, y, timeyear, dates
 
     def compute_spline_basis(self, show_splines = False):
+        """Compute the basis functions (B-splines) one which we decompose the transfer functions.
+        
+        Parameters
+        ----------
+        show_splines : bool, optional
+            If True, a figure showing the basis functions will be produced.
+        """
         m = self.m
         knots_ref = []
         val = 0

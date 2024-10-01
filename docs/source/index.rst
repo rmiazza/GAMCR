@@ -1,15 +1,15 @@
-.. MRF documentation master file, created by
+.. GAMCR documentation master file, created by
    sphinx-quickstart on Tue Aug  6 10:45:57 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
 Documentation
 ~~~~~~~~~~~~~
-`scClone2DR` is a package for learning drug response from single-cell omics data primarily developed and maintained by the `SDSC <https://www.datascience.ch/>`_, `Computational Biology Group D-BSSE <https://bsse.ethz.ch/cbg/>`_ and `NEXUS Personalized Health Technologies <https://www.nexus.ethz.ch/>`_. 
+`GAMCR` is a package for learning transfer functions characterizing the responses of watersheds to precipitation events. The package is developed and maintained by the `Swiss Data Science Center <https://www.datascience.ch/>`_ and the `Hydrology Group at Unil <https://wp.unil.ch/hydrology/paolo-benettin/>`_.
 
 
 
-If you use `scClone2DR` in your work, please cite our publication.
+If you use `GAMCR` in your work, please cite our publication.
 
 
 
@@ -22,7 +22,7 @@ If you use `scClone2DR` in your work, please cite our publication.
                 <img src="_static/presentation.svg" class="card-img-top" alt="installation with scvi action icon" height="52">
                 <div class="card-body flex-fill">
                     <h5 class="card-title">Project Presentation</h5>
-                    <p class="card-text">New to <em>Oncology</em>? Check out the project presentation.
+                    <p class="card-text">New to <em>watershed responses</em>? Check out the project presentation.
                     </p>
 
 .. container:: custom-button
@@ -41,7 +41,7 @@ If you use `scClone2DR` in your work, please cite our publication.
                 <img src="_static/computer-24px.svg" class="card-img-top" alt="installation with scvi action icon" height="52">
                 <div class="card-body flex-fill">
                     <h5 class="card-title">Installation</h5>
-                    <p class="card-text">New to <em>scClone2DR</em>? Check out the installation guide.
+                    <p class="card-text">New to <em>GAMCR</em>? Check out the installation guide.
                     </p>
 
 .. container:: custom-button
@@ -83,7 +83,7 @@ If you use `scClone2DR` in your work, please cite our publication.
 
 .. container:: custom-button
 
-    :doc:`To the documentation<documentation/scClone2DR>`
+    :doc:`To the documentation<documentation/GAMCR>`
 
 
 .. raw:: html
@@ -142,7 +142,7 @@ If you use `scClone2DR` in your work, please cite our publication.
     
     installation
     presentation
-    documentation/scClone2DR
+    documentation/GAMCR
     tutorials/index
     developer/index
     references

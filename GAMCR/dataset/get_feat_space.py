@@ -2,9 +2,17 @@ import numpy as np
 import pandas as pd
 import os
 
-GISID_GOOD_SITES = pd.read_csv('/mydata/watres/quentin/code/FLOW/hourly_analysis/splimodel/sites_damseffect_WBgood_coords.csv', encoding = "ISO-8859-1")['ID_GIS_gag'].to_numpy()
+import sys
+import os
 
-GISID_GOOD_SITES_str = [str(el) for el in GISID_GOOD_SITES]
+# Get the directory of the current file
+current_file_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Add this directory to sys.path
+# sys.path.append(current_file_directory)
+# GISID_GOOD_SITES = pd.read_csv('sites_damseffect_WBgood_coords.csv', encoding = "ISO-8859-1")['ID_GIS_gag'].to_numpy()
+
+# GISID_GOOD_SITES_str = [str(el) for el in GISID_GOOD_SITES]
 
 def get_feat_space(all_GISID=None, get_df=False, normalize=False):
     path_daily = '/mydata/watres/quentin/code/FLOW/data/Daily_Data/'

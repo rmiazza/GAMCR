@@ -12,11 +12,26 @@ def ReLU(x, delta=1e-3):
     return (np.maximum(0,x) + delta*(x<0))
 
 
-
-
-
-
 class Trainer():
+    """
+    A class with the algorithm to optimize the model's parameters.
+
+    ...
+
+    Attributes
+    ----------
+    L : int
+        number of basis functions on which the transfer function is decomposed - it is also equal to the number of GAMs considered in our model
+    n_splines : int
+        number of splines used for one GAM
+    lam : positive float
+        regularization parameter related to the smoothing penalty in the GAM
+
+    Methods
+    -------
+    trainer(ls_X, ls_modelmat, Y, dates=None,  lr=1e-3, max_iter=200, warm_start=False,  save_folder=None, name_model='', normalization_loss=1, lam_global=0)
+        Optimize the model parameters, savong the optimized model along the iterations.
+    """
     def __init__(self):
         pass
         
@@ -32,12 +47,28 @@ class Trainer():
     
         Parameters
         ---------
-        X : array-like of shape (n_samples, m_features)
+        ls_X : list of size L with entries being arrays of shape (n_samples, m_features)
             containing input data
+        ls_modelmat : list of size L
+            containing the matrices used in the convolution model to get the streamflow values.
         Y : array-like of shape (n,)
-            containing target data
-        weights : array-like of shape (n,)
-            containing sample weights
+            containing target data (streamflow values)
+        dates : array, optional
+            Array of dates.
+        lr : float, optional
+            Initial value of the learning rate. Note that the learning rate will be automatically adjusted to ensure a strict descrease of the training loss.
+        max_iter : int, optional
+            Maximum number of iterations of the projected gradient descent algorithm.
+        warm_start : bool, optional
+            If True, the model parameters will be initialized to the parameters saved in the model loaded.
+        save_folder : str, optional
+            Path of the folder of the studied site where the optimized model will be saved.
+        name_model : str, optional
+            Custom name of the model that will be saved.
+        normalization_loss : positive float, optional
+            Normalization factor for the loss (should be kept to 1).
+        lam_global : positive float, optional
+            Regularization parameter for the smoothing penalty applied on the transfer functions
     
         Returns
         -------

@@ -6,6 +6,5 @@ The easiest way to get familiar with the GAMCR package is to follow along with o
 
 .. nbgallery::
 	notebooks/generating-simulated-data
-	notebooks/preprocessing-the-data
 	notebooks/running-the-model
 	notebooks/visualizing-results
