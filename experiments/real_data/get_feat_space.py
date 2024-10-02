@@ -2,15 +2,19 @@ import numpy as np
 import pandas as pd
 import os
 
-# GISID_GOOD_SITES = pd.read_csv('/mydata/watres/quentin/code/FLOW/hourly_analysis/splimodel/sites_damseffect_WBgood_coords.csv', encoding = "ISO-8859-1")['ID_GIS_gag'].to_numpy()
+GISID_GOOD_SITES = pd.read_csv('/mydata/watres/quentin/code/FLOW/hourly_analysis/splimodel/sites_damseffect_WBgood_coords.csv', encoding = "ISO-8859-1")['ID_GIS_gag'].to_numpy()
 
-# GISID_GOOD_SITES_str = [str(el) for el in GISID_GOOD_SITES]
+GISID_GOOD_SITES_str = [str(el) for el in GISID_GOOD_SITES]
 
 def get_feat_space(all_GISID=None, get_df=False, normalize=False):
     path_daily = '/mydata/watres/quentin/code/FLOW/data/Daily_Data/'
     path = '/mydata/watres/quentin/code/FLOW/data/'
     file_catchprop = 'CH_Catchments_Geodata_MF_20221209.csv'
     os.chdir(path)
+    
+    pathdata = '/mydata/watres/quentin/code/FLOW/data/GISID2data/'
+    
+    
     df = pd.read_csv(path+file_catchprop, header=None,  engine='python')
     
     data_type = df.iloc[0,:]
@@ -47,11 +51,6 @@ def get_feat_space(all_GISID=None, get_df=False, normalize=False):
         for feature in category2feature[cat]:
             features2idxcategory[feature] = i
     df.columns = IDs
-    
-    
-    
-    df_catchment_names = df[list(IDs[:5])+['H_MIN','H_MAX', 'H_MEAN']]#df[list(IDs[:5])]
-    df_catchment_names.head()
     
     
     gis_id = df['GIS_ID']

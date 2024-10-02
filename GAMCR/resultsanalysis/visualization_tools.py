@@ -10,6 +10,14 @@ def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=
     H_weighted_avg = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
     H_avg = np.load(os.path.join(folder, 'H_avg.npy'))
     m = H_avg.shape[1]
+
+    with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
+        groups_precip = pickle.load(handle)
+        nJ = len(groups_precip)
+    with open(os.path.join(folder, 'groups_wetness.pkl'), 'rb') as handle:
+        groups_wetness = pickle.load(handle)
+        nQ = len(groups_wetness)
+    
     with open(os.path.join(folder, 'group2p_range.pkl'), 'rb') as handle:
         group2p_range = pickle.load(handle)
     with open(os.path.join(folder, 'group2q_range.pkl'), 'rb') as handle:
@@ -31,45 +39,49 @@ def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=
     if maxT is None:
         maxT = m
     x = np.arange(0,m,1)/24
-    colors = ['red', 'orange', 'green', 'blue']
-    fig,a =  plt.subplots(2,2)
+    colors = ['red', 'orange', 'green', 'cyan', 'blue']
+    if stratif_wetness:
+        K= nQ
+    else:
+        K = nJ
+    fig,a =  plt.subplots(int(np.ceil(K/2)),2)
     fig.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust layout to make space for the super title
     idx2legend = {}
-    for j in range(4):
-        for k in range(4):
+    for j in range(nJ):
+        for k in range(nQ):
             if stratif_wetness:
                 low, up = np.round(group2q_range[k], 3)
-                upleg = up if k!=3 else 'max'
+                upleg = up if k!=(nQ-1) else 'max'
                 id_x, id_y = k//2, k%2
                 a[id_x][id_y].set_title('Wetness range: {0}-{1}'.format(low,upleg))
                 id_col = j
-                low, up = np.round(group2p_range[4*j+k], 1)
-                upleg = up if j!=3 else 'max'
+                low, up = np.round(group2p_range[nQ*j+k], 1)
+                upleg = up if j!=(nJ-1) else 'max'
                 title_leg = 'Precipitation range'
                 idx2legend[j] = '{0}-{1}'.format(low,upleg)
             else:
-                low, up = np.round(group2p_range[4*j+k], 1)
-                upleg = up if j!=3 else 'max'
+                low, up = np.round(group2p_range[nQ*j+k], 1)
+                upleg = up if j!=(nJ-1) else 'max'
                 id_x, id_y = j//2, j%2
                 a[id_x][id_y].set_title('Precipitation range: {0}-{1}'.format(low,upleg))
                 id_col = k
                 low, up = np.round(group2q_range[k], 3)
-                upleg = up if k!=3 else 'max'
+                upleg = up if k!=(nQ-1) else 'max'
                 title_leg = 'Ant. wetness range'
                 idx2legend[k] = '{0}-{1}'.format(low,upleg)
                 
             if weighted:
-                a[id_x][id_y].plot(x[:maxT],H_weighted_avg[4*j+k,:maxT], linestyle='--', color=colors[id_col])
+                a[id_x][id_y].plot(x[:maxT],H_weighted_avg[nQ*j+k,:maxT], color=colors[id_col])
                 if true_tfs:
-                    a[id_x][id_y].plot(x[:maxT],H_weighted_avg_true[4*j+k,:maxT], color=colors[id_col])
+                    a[id_x][id_y].plot(x[:maxT],H_weighted_avg_true[nQ*j+k,:maxT], linestyle='--', color=colors[id_col])
                 a[id_x][id_y].set_ylabel('NRF', fontsize=14)
             else:
-                a[id_x][id_y].plot(x[:maxT],H_avg[4*j+k,:maxT], linestyle='--', color=colors[id_col])
+                a[id_x][id_y].plot(x[:maxT],H_avg[nQ*j+k,:maxT], color=colors[id_col])
                 if true_tfs:
-                    a[id_x][id_y].plot(x[:maxT],H_avg[4*j+k,:maxT], color=colors[id_col])
+                    a[id_x][id_y].plot(x[:maxT],H_avg[nQ*j+k,:maxT],linestyle='--', color=colors[id_col])
                 a[id_x][id_y].set_ylabel('RRD', fontsize=14)
                     
-    for idx in range(4):
+    for idx in range(K):
         try:
             plt.plot([],[], color=colors[idx], label=idx2legend[idx])
         except:
@@ -81,14 +93,19 @@ def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=
     plt.show()
 
 
-def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_CI=True, alpha=0.1, maxT=None):
-
+def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_CI=True, alpha=0.1, maxT=None, dataERRA=None, figname=None):
     folder = os.path.join(site_folder, "results")
-
-
     H_weighted_avg = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
     H_avg = np.load(os.path.join(folder, 'H_avg.npy'))
     m = H_avg.shape[1]
+    
+    with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
+        groups_precip = pickle.load(handle)
+        nJ = len(groups_precip)
+    with open(os.path.join(folder, 'groups_wetness.pkl'), 'rb') as handle:
+        groups_wetness = pickle.load(handle)
+        nQ = len(groups_wetness)
+        
     with open(os.path.join(folder, 'group2p_range.pkl'), 'rb') as handle:
         group2p_range = pickle.load(handle)
     with open(os.path.join(folder, 'group2q_range.pkl'), 'rb') as handle:
@@ -96,66 +113,84 @@ def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_
     with open(os.path.join(folder, 'group2nbpoints.pkl'), 'rb') as handle:
         group2nbpoints = pickle.load(handle)
 
+    if stratif_wetness:
+        K = nQ
+    else:
+        K = nJ
     try:
         H_weighted_avg_true = np.load(os.path.join(folder, 'H_weighted_avg_true.npy'))
         H_avg_true = np.load(os.path.join(folder, 'H_avg_true.npy'))
         with open(os.path.join(folder, 'group2nbpoints_true.pkl'), 'rb') as handle:
             group2nbpoints_true = pickle.load(handle)
         true_tfs = True
-        tf_true = np.zeros((4,m))
-        norm_true = np.zeros(4)
+        tf_true = np.zeros((K,m))
+        norm_true = np.zeros(K)
     except:
         true_tfs = False
         pass
 
     if maxT is None:
         maxT = m
-    x = np.arange(0,m,1)/24
-    colors = ['red', 'orange', 'green', 'blue']
-    tf = np.zeros((4,m))
-    norm = np.zeros(4)
-    idx2legends = ['' for k in range(4)]
+    if not(dataERRA is None):
+        maxT = int(np.max(dataERRA['lagtime']))
+    x = np.arange(0,maxT,1)/24
+    colors = ['red', 'orange', 'green', 'cyan', 'blue']
+    tf = np.zeros((K,m))
+    norm = np.zeros(K)
+    idx2legends = ['' for k in range(K)]
 
-    for j in range(1,4):
-        for k in range(4):
+    for j in range(nJ):
+        for k in range(nQ):
             if stratif_wetness:
                 idx = k
-                low,up = np.round(group2q_range[4*j+k], 3)
-                upleg = up if idx!=3 else 'max'
+                low,up = np.round(group2q_range[nQ*j+k], 3)
+                upleg = up if idx!=(nQ-1) else 'max'
                 idx2legends[idx] = '{0}-{1}'.format(low,upleg)
                 tit_legend = 'Antecedent wetness'
             else:
                 idx = j
-                low,up = np.round(group2p_range[4*j+k], 1)
-                upleg = up if idx!=3 else 'max'
+                low,up = np.round(group2p_range[nJ*j+k], 1)
+                upleg = up if idx!=(nJ-1) else 'max'
                 idx2legends[idx] = '{0}-{1}'.format(low,upleg)
                 tit_legend = 'Precipitation intensity'
 
 
-            if group2nbpoints[4*j+k]>1:
-                norm[idx] += group2nbpoints[4*j+k]
-                tf[idx,:] += H_weighted_avg[4*j+k,:] * group2nbpoints[4*j+k]
+            if group2nbpoints[nQ*j+k]>1:
+                norm[idx] += group2nbpoints[nQ*j+k]
+                tf[idx,:] += H_weighted_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
             if true_tfs:
-                if group2nbpoints_true[4*j+k]>1:
-                    norm_true[idx] += group2nbpoints_true[4*j+k]
-                    tf_true[idx,:] += H_weighted_avg_true[4*j+k,:] * group2nbpoints_true[4*j+k]
-    for idx in range(4):
+                if group2nbpoints_true[nQ*j+k]>1:
+                    norm_true[idx] += group2nbpoints_true[nQ*j+k]
+                    tf_true[idx,:] += H_weighted_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+    for idx in range(K):
         tf[idx,:] /= norm[idx]
-    for idx in range(4):
-        plt.plot(x[:maxT],tf[idx,:maxT], color=colors[idx], linestyle='--')
+    for idx in range(K):
+        plt.plot(x[:maxT],tf[idx,:maxT], color=colors[idx])
         plt.plot([],[], color=colors[idx], label=str(idx2legends[idx]))
+
+    plt.plot([],[], color='black',  label='GAMCR')
     if true_tfs:
-        for idx in range(4):
+        for idx in range(K):
             tf_true[idx,:] /= norm_true[idx]
-        for idx in range(4):
-            plt.plot(x[:maxT],tf_true[idx,:maxT], color=colors[idx])
+        for idx in range(K):
+            plt.plot(x[:maxT],tf_true[idx,:maxT], color=colors[idx], linestyle='--')
+        plt.plot([],[], color='black', linestyle='--', label='Ground truth')
     
     if weighted:
+        if not(dataERRA is None):
+            for idx in range(K):
+                plt.plot(dataERRA['lagtime']/24,dataERRA['group2NRF'][idx,:], color=colors[idx], linestyle=':')
+            plt.plot([],[], color='black', linestyle=':', label='ERRA')
+
         plt.ylabel('NRF', fontsize=14)
     else:
         plt.ylabel('RRD', fontsize=14)
-    plt.title("{0}".format(site))
+    plt.xlabel('Lag (in days)', fontsize=14)
     plt.legend(title=tit_legend)
+    if not(figname is None):
+        plt.savefig(figname+'.png', dpi=250, bbox_inches='tight')
+    else:
+        plt.title("{0}".format(site))
     plt.show()
 
 
@@ -163,7 +198,7 @@ def get_colors(n):
     cmap = plt.cm.get_cmap('tab20', n)  # You can use other colormaps like 'viridis', 'plasma', etc.
     return [cmap(i) for i in range(n)]
 
-def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0.1, maxT=24*20, log_ordo=False):
+def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0.1, maxT=24*20, log_ordo=False, show_sites_labels=True, figsave=True):
     site2tf = {}
     colors = get_colors(len(all_sites))
     
@@ -175,6 +210,15 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
         H_weighted_avg = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
         H_avg = np.load(os.path.join(folder, 'H_avg.npy'))
         m = H_avg.shape[1]
+    
+            
+        with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
+            groups_precip = pickle.load(handle)
+            nJ = len(groups_precip)
+        with open(os.path.join(folder, 'groups_wetness.pkl'), 'rb') as handle:
+            groups_wetness = pickle.load(handle)
+            nQ = len(groups_wetness)
+        
         with open(os.path.join(folder, 'group2p_range.pkl'), 'rb') as handle:
             group2p_range = pickle.load(handle)
         with open(os.path.join(folder, 'group2q_range.pkl'), 'rb') as handle:
@@ -198,25 +242,25 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
         tf = np.zeros(m)
         norm = 0
     
-        for j in range(1,4):
-            for k in range(4):
+        for j in range(1,nJ):
+            for k in range(nQ):
                 if weighted:
-                    if group2nbpoints[4*j+k]>1:
-                        norm += group2nbpoints[4*j+k]
-                        tf += H_weighted_avg[4*j+k,:] * group2nbpoints[4*j+k]
+                    if group2nbpoints[nQ*j+k]>1:
+                        norm += group2nbpoints[nQ*j+k]
+                        tf += H_weighted_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
 
                     if true_tfs:
-                        if group2nbpoints_true[4*j+k]>1:
-                            norm_true += group2nbpoints_true[4*j+k]
-                            tf_true += H_weighted_avg_true[4*j+k,:] * group2nbpoints_true[4*j+k]
+                        if group2nbpoints_true[nQ*j+k]>1:
+                            norm_true += group2nbpoints_true[nQ*j+k]
+                            tf_true += H_weighted_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
                 else:
-                    if group2nbpoints[4*j+k]>1:
-                        norm += group2nbpoints[4*j+k]
-                        tf += H_avg[4*j+k,:] * group2nbpoints[4*j+k]
+                    if group2nbpoints[nQ*j+k]>1:
+                        norm += group2nbpoints[nQ*j+k]
+                        tf += H_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
                     if true_tfs:
-                        if group2nbpoints_true[4*j+k]>1:
-                            norm_true += group2nbpoints_true[4*j+k]
-                            tf_true += H_avg_true[4*j+k,:] * group2nbpoints_true[4*j+k]
+                        if group2nbpoints_true[nQ*j+k]>1:
+                            norm_true += group2nbpoints_true[nQ*j+k]
+                            tf_true += H_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
 
         tf /= norm
         if true_tfs:
@@ -226,23 +270,50 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
         else:
             abs = x[:maxT]
         if log_ordo:
-            plt.plot(abs,np.log10(tf[:maxT]), color=colors[id_site], linestyle='--')
+            if show_sites_labels:
+                plt.plot(abs,np.log10(tf[:maxT]), color=colors[id_site], label=site)
+            else:
+                plt.plot(abs,np.log10(tf[:maxT]), color=colors[id_site])
             if true_tfs:
-                plt.plot(abs,np.log10(tf_true[:maxT]), color=colors[id_site])            
+                plt.plot(abs,np.log10(tf_true[:maxT]), color=colors[id_site], linestyle='--')            
         else:
-            plt.plot(abs,tf[:maxT], color=colors[id_site], linestyle='--')
+            if show_sites_labels:
+                plt.plot(abs,tf[:maxT], color=colors[id_site], label=site)
+            else:
+                plt.plot(abs,tf[:maxT], color=colors[id_site])
             if true_tfs:
-                plt.plot(abs,tf_true[:maxT], color=colors[id_site])
+                plt.plot(abs,tf_true[:maxT], color=colors[id_site], linestyle='--')
 
         id_site += 1
+    
     if weighted:
-        plt.ylabel('NRF', fontsize=14)
+        if log_ordo:
+            title = 'Log(NRF)'
+        else:
+            title = 'NRF'
     else:
-        plt.ylabel('RRD', fontsize=14)
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        if log_ordo:
+            title = 'Log(RRD)'
+        else:
+            title = 'RRD'
+    plt.ylabel(title, fontsize=14)
+    if not(log_abs):
+        title += '_days'
+        plt.xlabel('Lag in days', fontsize=14)
+    else:
+        title += '_logdays'
+        plt.xlabel('Log( Lag in days )', fontsize=14)
+            
+    plt.plot([],[], color='black', label='GAMCR')
+    if true_tfs:
+        plt.plot([],[], color='black', linestyle='--', label='Ground truth')
+    plt.legend()
+    title += 'global.png'
+    if figsave:
+        plt.savefig(title, dpi=250, bbox_inches='tight')
     plt.show()
 
-def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=False):
+def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=False, dataERRA=None, show_GAMCR=True, show_sites_labels=True, figsave=None):
     site2tf = {}
     import math
     colors = get_colors(len(all_sites))
@@ -279,6 +350,13 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
         H_weighted_avgbis = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
         H_avgbis = np.load(os.path.join(folder, 'H_avg.npy'))
         m = H_avgbis.shape[1]
+        
+        with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
+            groups_precip = pickle.load(handle)
+            nJ = len(groups_precip)
+        with open(os.path.join(folder, 'groups_wetness.pkl'), 'rb') as handle:
+            groups_wetness = pickle.load(handle)
+            nQ = len(groups_wetness)
         with open(os.path.join(folder, 'group2p_range.pkl'), 'rb') as handle:
             group2p_range = pickle.load(handle)
         with open(os.path.join(folder, 'group2q_range.pkl'), 'rb') as handle:
@@ -288,8 +366,9 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
 
         group2means_precip = np.load(os.path.join(folder, 'group2means_precip.npy'))
         group2means_wetness = np.load(os.path.join(folder, 'group2means_wetness.npy'))
-        K = 4
 
+
+        K = nJ
         try:
             H_weighted_avgbis_true = np.load(os.path.join(folder, 'H_weighted_avg_true.npy'))
             H_avgbis_true = np.load(os.path.join(folder, 'H_avg_true.npy'))
@@ -312,22 +391,22 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
         H_avg = np.zeros((K,m))
         quantiles_precip = np.zeros(K)
         norm = np.zeros(K)
-        for j in range(4):
-            for k in range(4):
+        for j in range(K):
+            for k in range(nQ):
                 idx = j
-                if group2nbpoints[4*j+k]>1:
-                    norm[idx] += group2nbpoints[4*j+k]
-                    H_weighted_avg[idx,:] += H_weighted_avgbis[4*j+k,:] * group2nbpoints[4*j+k]
-                    H_avg[idx,:] += H_avgbis[4*j+k,:] * group2nbpoints[4*j+k]
-                    quantiles_precip[idx] += group2means_precip[4*j+k] * group2nbpoints[4*j+k]
+                if group2nbpoints[nQ*j+k]>1:
+                    norm[idx] += group2nbpoints[nQ*j+k]
+                    H_weighted_avg[idx,:] += H_weighted_avgbis[nQ*j+k,:] * group2nbpoints[nQ*j+k]
+                    H_avg[idx,:] += H_avgbis[nQ*j+k,:] * group2nbpoints[nQ*j+k]
+                    quantiles_precip[idx] += group2means_precip[nQ*j+k] * group2nbpoints[nQ*j+k]
 
                 if true_tfs:
-                    if group2nbpoints_true[4*j+k]>1:
-                        norm_true[idx] += group2nbpoints_true[4*j+k]
-                        H_weighted_avg_true[idx,:] += H_weighted_avgbis_true[4*j+k,:] * group2nbpoints_true[4*j+k]
-                        H_avg_true[idx,:] += H_avgbis_true[4*j+k,:] * group2nbpoints_true[4*j+k]
-                        quantiles_precip_true[idx] += group2means_precip_true[4*j+k] * group2nbpoints_true[4*j+k]
-        for idx in range(4):
+                    if group2nbpoints_true[nQ*j+k]>1:
+                        norm_true[idx] += group2nbpoints_true[nQ*j+k]
+                        H_weighted_avg_true[idx,:] += H_weighted_avgbis_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+                        H_avg_true[idx,:] += H_avgbis_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+                        quantiles_precip_true[idx] += group2means_precip_true[nQ*j+k] * group2nbpoints_true[nQ*j+k]
+        for idx in range(K):
             H_weighted_avg[idx,:] /= norm[idx]
             quantiles_precip[idx] /= norm[idx]
             if true_tfs:
@@ -401,7 +480,16 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
                   'mean': '{0} mean'.format(TF),
                   'peaklag': '{0} peak lag'.format(TF)
                  }
-    print(stats_true['quantiles'])
+
+    def get_stat_ERRA(group2nrf, stat):
+        if stat == "area":
+            return np.sum(group2nrf, axis=1)
+        elif stat == "peak":
+            return np.max(group2nrf, axis=1)
+        elif stat == "mean":
+            return np.mean(group2nrf, axis=1)
+        elif stat == "peaklag":
+            return np.argmax(group2nrf, axis=1)
     for stat in ['area', 'peak', 'mean', 'peaklag']:
         tickslabel = []
         count_fig = -1
@@ -411,22 +499,49 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
                 count_fig += 1
                 K = len(stats_esti[stat][site])
                 if log_ordo:
-                    plt.scatter(stats_esti['quantiles'][site], np.log(stats_esti[stat][site]), marker='x', c=colors[id_station])
-                    plt.plot(stats_esti['quantiles'][site], np.log(stats_esti[stat][site]), linestyle='--', c=colors[id_station])
+                    if show_GAMCR:
+                        plt.scatter(stats_esti['quantiles'][site], np.log(stats_esti[stat][site]), marker='x', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_esti['quantiles'][site], np.log(stats_esti[stat][site]), c=colors[id_station])
                     if true_tfs:
-                        plt.scatter(stats_true['quantiles'][site], np.log(stats_true[stat][site]), marker='+', c=colors[id_station])
-                        plt.plot(stats_true['quantiles'][site], np.log(stats_true[stat][site]), c=colors[id_station])
+                        plt.scatter(stats_true['quantiles'][site], np.log(stats_true[stat][site]), marker='+', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_true['quantiles'][site], np.log(stats_true[stat][site]), linestyle='--', c=colors[id_station])
+                    if dataERRA != None:
+                        erra_stats = get_stat_ERRA(dataERRA[site]['group2NRF'], stat)
+                        plt.scatter(stats_true['quantiles'][site], np.log(erra_stats), marker='|', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_true['quantiles'][site], np.log(erra_stats), linestyle=':', c=colors[id_station])
                 else:
-                    plt.scatter(stats_esti['quantiles'][site], stats_esti[stat][site], marker='+', c=colors[id_station])
-                    plt.plot(stats_esti['quantiles'][site], stats_esti[stat][site], linestyle='--', c=colors[id_station])
+                    if show_GAMCR:
+                        plt.scatter(stats_esti['quantiles'][site], stats_esti[stat][site], marker='+', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_esti['quantiles'][site], stats_esti[stat][site],  c=colors[id_station])
                     if true_tfs:
-                        plt.scatter(stats_true['quantiles'][site], stats_true[stat][site], marker='x', c=colors[id_station])
-                        plt.plot(stats_true['quantiles'][site], stats_true[stat][site],  c=colors[id_station])
+                        plt.scatter(stats_true['quantiles'][site], stats_true[stat][site], marker='x', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_true['quantiles'][site], stats_true[stat][site],  linestyle='--', c=colors[id_station])
+                    if dataERRA != None:
+                        erra_stats = get_stat_ERRA(dataERRA[site]['group2NRF'], stat)
+                        plt.scatter(stats_true['quantiles'][site], erra_stats, marker='|', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_true['quantiles'][site], erra_stats, linestyle=':', c=colors[id_station])
 
-                plt.plot([], [], label=site, c=colors[id_station])
-    
-        plt.legend(ncol=5, loc='upper center', bbox_to_anchor=(0.5, -0.1), fontsize='small', title='Site')
-        plt.title(stat, fontsize=14)
+                if show_sites_labels:
+                    plt.plot([], [], label=site, c=colors[id_station])
+
+        title = stat
+        if show_GAMCR:
+            title += '_GAMCR'
+            plt.plot([],[], color='black', label='GAMCR')
+        plt.plot([],[], color='black', linestyle='--', label='Ground truth')
+        if dataERRA != None:
+            title += '_ERRA'
+            plt.plot([],[], color='black', linestyle=':', label='ERRA')
+
+#        plt.legend(ncol=5, loc='upper center', bbox_to_anchor=(0.5, -0.1), fontsize='small', title='Site')
+        plt.legend(loc=4)
+
         plt.xlabel('Precipitation ($mm.h^{-1}$)', fontsize=14)
-        plt.ylabel(stat2label[stat], fontsize=14)
+        if log_ordo:
+            plt.ylabel('Log( {0} )'.format(stat2label[stat]), fontsize=14)
+        else:
+            plt.ylabel(stat2label[stat], fontsize=14)
+        if figsave:
+            plt.savefig(f'{title}.png', dpi=250, bbox_inches='tight')
+        plt.title(stat, fontsize=14)
         plt.show()
