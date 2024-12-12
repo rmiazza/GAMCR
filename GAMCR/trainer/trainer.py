@@ -5,7 +5,7 @@ from copy import deepcopy
 from tqdm import tqdm
 import numpy as np
 import os
-from ..utils import build_custom_matrix
+from ..utils import build_custom_matrix, compute_smoothing_penalty_matrix
 
 
 def ReLU(x, delta=1e-3):
@@ -121,9 +121,10 @@ class Trainer():
         P = scipy.linalg.block_diag(*ls_P)
         print(P.shape, S.shape)
 
-        a = np.mean(self.gam._modelmat(ls_X[0]), axis=0)
+        idxs_filter = np.where(ls_X[0][:,0]>2)[0]
+        a = np.mean(self.gam._modelmat(ls_X[0])[idxs_filter,:], axis=0)
         smooth_P = np.kron( build_custom_matrix(self.L), np.dot(a.reshape(-1,1), a.reshape(1,-1)) )
-
+        #smooth_P = np.kron( compute_smoothing_penalty_matrix(self.L, self.knots_splines), np.dot(a.reshape(-1,1), a.reshape(1,-1)) )
 
         # + 0.0001*n*smooth_P
         # if we dont have any constraints, then do cholesky now

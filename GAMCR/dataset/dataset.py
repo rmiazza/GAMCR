@@ -168,6 +168,8 @@ class Dataset():
             nt = matJ.shape[0]
             for l in range(nfiles-1):
                 low, up = l*(nt//nfiles), (l+1)*(nt//nfiles)
+                if (l==(nfiles-2)):
+                    up = nt
                 np.save(os.path.join(path,'matJ_{0}.npy'.format(l)), matJ[low:up,:,:])
                 np.save(os.path.join(path,'X_{0}.npy'.format(l)), X[low:up,:])
                 np.save(os.path.join(path,'y_{0}.npy'.format(l)), Y[low:up])
@@ -205,6 +207,8 @@ class Dataset():
         nt = matJ.shape[0]
         for l in range(nfiles-1):
             low, up = l*(nt//nfiles), (l+1)*(nt//nfiles)
+            if (l==(nfiles-2)):
+                up = nt
             np.save(os.path.join(save_folder,'matJ_{0}.npy'.format(l)), matJ[low:up,:,:])
             np.save(os.path.join(save_folder,'X_{0}.npy'.format(l)), X[low:up,:])
             np.save(os.path.join(save_folder,'y_{0}.npy'.format(l)), Y[low:up])

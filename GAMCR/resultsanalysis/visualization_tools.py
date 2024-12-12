@@ -5,6 +5,25 @@ import os
 import numpy as np
 
 
+import matplotlib.cm as cm
+import colorsys
+
+
+def rainbow_colors(K = 10):
+        
+    colors = cm.rainbow(np.linspace(0, 1, K))
+    
+    # Reduce brightness by converting RGB to HSV and adjusting Value (V)
+    adjusted_colors = []
+    for color in colors:
+        r, g, b, _ = color
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        v = v * 0.7  # Reduce brightness to 70% of original
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        adjusted_colors.append((r, g, b))
+    return adjusted_colors
+
+
 def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=True, alpha=0.1, maxT=None):
     folder = os.path.join(site_folder, "results")
     H_weighted_avg = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
@@ -39,11 +58,15 @@ def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=
     if maxT is None:
         maxT = m
     x = np.arange(0,m,1)/24
-    colors = ['red', 'orange', 'green', 'cyan', 'blue']
+    #colors = ['red', 'orange', 'green', 'cyan', 'blue']
+
+
     if stratif_wetness:
         K= nQ
     else:
         K = nJ
+    from matplotlib.pyplot import cm
+    colors = rainbow_colors(K)
     fig,a =  plt.subplots(int(np.ceil(K/2)),2)
     fig.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust layout to make space for the super title
     idx2legend = {}
@@ -134,7 +157,9 @@ def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_
     if not(dataERRA is None):
         maxT = int(np.max(dataERRA['lagtime']))
     x = np.arange(0,maxT,1)/24
-    colors = ['red', 'orange', 'green', 'cyan', 'blue']
+    #colors = ['red', 'orange', 'green', 'cyan', 'blue']
+    from matplotlib.pyplot import cm
+    colors = rainbow_colors(K)
     tf = np.zeros((K,m))
     norm = np.zeros(K)
     idx2legends = ['' for k in range(K)]
@@ -198,10 +223,13 @@ def get_colors(n):
     cmap = plt.cm.get_cmap('tab20', n)  # You can use other colormaps like 'viridis', 'plasma', etc.
     return [cmap(i) for i in range(n)]
 
-def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0.1, maxT=24*20, log_ordo=False, show_sites_labels=True, figsave=True):
+def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0.1, maxT=24*20, log_ordo=False, dataERRA=None, show_sites_labels=True, figsave=True):
+    if not(weighted):
+        dataERRA = None
     site2tf = {}
-    colors = get_colors(len(all_sites))
-    
+    #colors = get_colors(len(all_sites))
+    colors= ['blue', 'orange' , 'red'] + list(get_colors(len(all_sites)))
+
     #colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w', '#FFA500', '#800080', '#A52A2A', '#FFC0CB', '#00FF00', '#808000', '#000080', '#008080']
     id_site = 0
     for site in all_sites:
@@ -237,13 +265,22 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
         except:
             true_tfs = False
             pass
+
+        if not(dataERRA is None):
+            norm_erra = 0
+            m_erra = len(dataERRA[site]['lagtime'])
+            tf_erra = np.zeros(m_erra)
         
         x = np.arange(0,m,1)/24
         tf = np.zeros(m)
         norm = 0
     
-        for j in range(1,nJ):
+        for j in range(nJ):
             for k in range(nQ):
+                if not(dataERRA is None):
+                    if group2nbpoints_true[nQ*j+k]>1:
+                        norm_erra += group2nbpoints_true[nQ*j+k]
+                        tf_erra += dataERRA[site]['group2NRF'][j,:] * group2nbpoints_true[nQ*j+k]
                 if weighted:
                     if group2nbpoints[nQ*j+k]>1:
                         norm += group2nbpoints[nQ*j+k]
@@ -262,20 +299,30 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
                             norm_true += group2nbpoints_true[nQ*j+k]
                             tf_true += H_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
 
+            
+
         tf /= norm
         if true_tfs:
             tf_true /= norm_true
+        if not(dataERRA is None):
+            tf_erra /= norm_erra
         if log_abs:
             abs = np.log10(x[:maxT])
+            if not(dataERRA is None):
+                abs_erra = [np.log10(el/24) for el in dataERRA[site]['lagtime'] if el<=maxT]
         else:
             abs = x[:maxT]
+            if not(dataERRA is None):
+                abs_erra = [el/24 for el in dataERRA[site]['lagtime'] if el<=maxT]
         if log_ordo:
             if show_sites_labels:
                 plt.plot(abs,np.log10(tf[:maxT]), color=colors[id_site], label=site)
             else:
                 plt.plot(abs,np.log10(tf[:maxT]), color=colors[id_site])
             if true_tfs:
-                plt.plot(abs,np.log10(tf_true[:maxT]), color=colors[id_site], linestyle='--')            
+                plt.plot(abs,np.log10(tf_true[:maxT]), color=colors[id_site], linestyle='--')     
+            if not(dataERRA is None):
+                plt.plot(abs_erra,np.log10(tf_erra)[:len(abs_erra)], color=colors[id_site], linestyle=':')                     
         else:
             if show_sites_labels:
                 plt.plot(abs,tf[:maxT], color=colors[id_site], label=site)
@@ -283,6 +330,8 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
                 plt.plot(abs,tf[:maxT], color=colors[id_site])
             if true_tfs:
                 plt.plot(abs,tf_true[:maxT], color=colors[id_site], linestyle='--')
+            if not(dataERRA is None):
+                plt.plot(abs_erra, tf_erra[:len(abs_erra)], color=colors[id_site], linestyle=':')         
 
         id_site += 1
     
@@ -307,17 +356,22 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
     plt.plot([],[], color='black', label='GAMCR')
     if true_tfs:
         plt.plot([],[], color='black', linestyle='--', label='Ground truth')
+    if not(dataERRA is None):
+        plt.plot([],[], color='black', linestyle=':', label='ERRA')
     plt.legend()
     title += 'global.png'
     if figsave:
         plt.savefig(title, dpi=250, bbox_inches='tight')
     plt.show()
 
-def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=False, dataERRA=None, show_GAMCR=True, show_sites_labels=True, figsave=None):
+def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=False, dataERRA=None, show_GAMCR=True, show_sites_labels=True, figsave=None, stats2show=None):
+    if stats2show is None:
+        stats2show = ['area', 'peak', 'mean', 'peaklag']
     site2tf = {}
     import math
-    colors = get_colors(len(all_sites))
+    #colors = get_colors(len(all_sites))
     #colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w', '#FFA500', '#800080', '#A52A2A', '#FFC0CB', '#00FF00', '#808000', '#000080', '#008080']
+    colors= ['blue', 'orange' , 'red'] + list(get_colors(len(all_sites)))
     id_site = 0
 
     site2area_esti = {}
@@ -427,12 +481,12 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
         for k in range(K):
             site2area_esti[site][k] = np.sum(H_weighted_avg[k,:])
             site2peak_esti[site][k] = np.max(H_weighted_avg[k,:])
-            site2mean_esti[site][k] = np.mean(H_weighted_avg[k,:])
+            site2mean_esti[site][k] = np.sum(H_weighted_avg[k,:]*np.arange(m)/np.sum(H_weighted_avg[k,:]))
             site2peaklag_esti[site][k] = np.argmax(H_weighted_avg[k,:])
 
             site2area_esti_noweight[site][k] = np.sum(H_avg[k,:])
             site2peak_esti_noweight[site][k] = np.max(H_avg[k,:])
-            site2mean_esti_noweight[site][k] = np.mean(H_avg[k,:])
+            site2mean_esti_noweight[site][k] = np.sum(H_avg[k,:]*np.arange(m)/np.sum(H_avg[k,:]))
             site2peaklag_esti_noweight[site][k] = np.argmax(H_avg[k,:])
 
         if true_tfs:
@@ -447,16 +501,17 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
             site2mean_true_noweight[site] = np.zeros(K)
             site2quantiles_true[site] = quantiles_precip_true
             site2peaklag_true_noweight[site] = np.zeros(K)
-    
+
+            mtrue = H_weighted_avg_true.shape[1]
             for k in range(K):
                 site2area_true[site][k] = np.sum(H_weighted_avg_true[k,:])
                 site2peak_true[site][k] = np.max(H_weighted_avg_true[k,:])
-                site2mean_true[site][k] = np.mean(H_weighted_avg_true[k,:])
+                site2mean_true[site][k] = np.sum(H_weighted_avg_true[k,:]*np.arange(mtrue)/np.sum(H_weighted_avg_true[k,:]))
                 site2peaklag_true[site][k] = np.argmax(H_weighted_avg_true[k,:])
     
                 site2area_true_noweight[site][k] = np.sum(H_avg_true[k,:])
                 site2peak_true_noweight[site][k] = np.max(H_avg_true[k,:])
-                site2mean_true_noweight[site][k] = np.mean(H_avg_true[k,:])
+                site2mean_true_noweight[site][k] = np.sum(H_avg_true[k,:]*np.arange(mtrue)/np.sum(H_avg_true[k,:]))
                 site2peaklag_true_noweight[site][k] = np.argmax(H_avg_true[k,:])
     
     
@@ -477,20 +532,42 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
 
     stat2label = {'area': '{0} runoff volume'.format(TF),
                   'peak': '{0} peak height'.format(TF),
-                  'mean': '{0} mean'.format(TF),
+                  'mean': '{0} mean lag'.format(TF),
                   'peaklag': '{0} peak lag'.format(TF)
                  }
 
-    def get_stat_ERRA(group2nrf, stat):
+    def get_stat_ERRA(group2nrf, lagtime, stat):
+        from scipy.integrate import trapezoid
+        from scipy.interpolate import interp1d
         if stat == "area":
-            return np.sum(group2nrf, axis=1)
+            group2area = np.zeros(group2nrf.shape[0])
+            for k in range(group2nrf.shape[0]):
+                group2area[k] = trapezoid(group2nrf[k,:], lagtime)
+            return group2area
         elif stat == "peak":
             return np.max(group2nrf, axis=1)
         elif stat == "mean":
-            return np.mean(group2nrf, axis=1)
+            group2mean = np.zeros(group2nrf.shape[0])
+            for k in range(group2nrf.shape[0]):
+                # Step 1: Interpolate y(x) with a finer grid
+                x_fine = np.linspace(lagtime[0], lagtime[-1], m)  # Choose a finer grid
+                interpolator = interp1d(lagtime, group2nrf[k,:], kind='cubic')  # 'cubic' for smooth interpolation
+                y_fine = interpolator(x_fine)
+                # Step 2: Compute the weighted integral
+                weighted_y_fine = x_fine * y_fine
+                weighted_y_fine /= np.sum(weighted_y_fine)
+                group2mean[k] = np.sum(weighted_y_fine*x_fine)
+            return group2mean
         elif stat == "peaklag":
-            return np.argmax(group2nrf, axis=1)
-    for stat in ['area', 'peak', 'mean', 'peaklag']:
+            group2peak = np.zeros(group2nrf.shape[0])
+            for k in range(group2nrf.shape[0]):
+                group2peak[k] = lagtime[np.argmax(group2nrf[k,:])]
+            return group2peak
+
+    linestyleERRA = '-'
+    if show_GAMCR:
+        linestyleERRA = ':'
+    for stat in stats2show:
         tickslabel = []
         count_fig = -1
         max_val = -float('inf')
@@ -506,9 +583,9 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
                         plt.scatter(stats_true['quantiles'][site], np.log(stats_true[stat][site]), marker='+', c=[colors[id_station] for gh in range(K)])
                         plt.plot(stats_true['quantiles'][site], np.log(stats_true[stat][site]), linestyle='--', c=colors[id_station])
                     if dataERRA != None:
-                        erra_stats = get_stat_ERRA(dataERRA[site]['group2NRF'], stat)
-                        plt.scatter(stats_true['quantiles'][site], np.log(erra_stats), marker='|', c=[colors[id_station] for gh in range(K)])
-                        plt.plot(stats_true['quantiles'][site], np.log(erra_stats), linestyle=':', c=colors[id_station])
+                        erra_stats = get_stat_ERRA(dataERRA[site]['group2NRF'], dataERRA[site]['lagtime'], stat)
+                        plt.scatter(stats_esti['quantiles'][site], np.log(erra_stats), marker='|', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_esti['quantiles'][site], np.log(erra_stats), linestyle=linestyleERRA, c=colors[id_station])
                 else:
                     if show_GAMCR:
                         plt.scatter(stats_esti['quantiles'][site], stats_esti[stat][site], marker='+', c=[colors[id_station] for gh in range(K)])
@@ -517,9 +594,9 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
                         plt.scatter(stats_true['quantiles'][site], stats_true[stat][site], marker='x', c=[colors[id_station] for gh in range(K)])
                         plt.plot(stats_true['quantiles'][site], stats_true[stat][site],  linestyle='--', c=colors[id_station])
                     if dataERRA != None:
-                        erra_stats = get_stat_ERRA(dataERRA[site]['group2NRF'], stat)
-                        plt.scatter(stats_true['quantiles'][site], erra_stats, marker='|', c=[colors[id_station] for gh in range(K)])
-                        plt.plot(stats_true['quantiles'][site], erra_stats, linestyle=':', c=colors[id_station])
+                        erra_stats = get_stat_ERRA(dataERRA[site]['group2NRF'], dataERRA[site]['lagtime'], stat)
+                        plt.scatter(stats_esti['quantiles'][site], erra_stats, marker='|', c=[colors[id_station] for gh in range(K)])
+                        plt.plot(stats_esti['quantiles'][site], erra_stats, linestyle=linestyleERRA, c=colors[id_station])
 
                 if show_sites_labels:
                     plt.plot([], [], label=site, c=colors[id_station])
@@ -528,10 +605,11 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
         if show_GAMCR:
             title += '_GAMCR'
             plt.plot([],[], color='black', label='GAMCR')
-        plt.plot([],[], color='black', linestyle='--', label='Ground truth')
+        if true_tfs:
+            plt.plot([],[], color='black', linestyle='--', label='Ground truth')
         if dataERRA != None:
             title += '_ERRA'
-            plt.plot([],[], color='black', linestyle=':', label='ERRA')
+            plt.plot([],[], color='black', linestyle=linestyleERRA, label='ERRA')
 
 #        plt.legend(ncol=5, loc='upper center', bbox_to_anchor=(0.5, -0.1), fontsize='small', title='Site')
         plt.legend(loc=4)

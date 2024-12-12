@@ -22,7 +22,7 @@ class ComputeStatistics():
     def __init__(self):
         pass
 
-    def compute_statistics(self, site_folder, site, nblocks = 4, min_precip = 1, groups_wetness=None, groups_precip=None, max_files=20, normalization_streamflow=1):
+    def compute_statistics(self, site_folder, site, nblocks = 4, min_precip = 1, groups_wetness=None, groups_precip=None, max_files=20, normalization_streamflow=1, save_folder=None, filtering_time_points=None):
         """Compute different information on the learned transfer functions, such as: - the global average NRD/RDD - the average NRF/RRD over some ensembles (you can stratify either by precipitation intensity, antecendent wetness or by both) - the area, mean, peak and peak lag of the transfer function over different ensembles for the precipitation intensity.
 
         Parameters
@@ -43,15 +43,25 @@ class ComputeStatistics():
             Maximum number of files loaded to compute the statistics (among the ones saved when preprocessing the data using one of the "save_batch" type method
         normalization_streamflow : positive float
             Normalization vector to apply on the loaded streamflow time series (typically to go from cubic meter per second to mm per hour).
+        filtering_time_points: function
+            Takes as input a list of dates and return the position indexes that we should keep to compute the statistics. WARNING: currently, this functionality is only supported without the ground truth data (I should code a similar filtering procedure to make sure statistics from predicted and ground truth data are computed on the same dataset).
         """
         import pickle
-        save_folder = os.path.join(site_folder, 'results')
+        if save_folder is None:
+            save_folder = os.path.join(site_folder, 'results')
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
         m = self.m
 
         data_folder = os.path.join(site_folder, 'data')
         X, matJ, y, timeyear, dates = self.load_data(data_folder, max_files=max_files)
+        if not(filtering_time_points is None):
+            idxs = filtering_time_points(dates)
+            X = X[idxs,:]
+            matJ = matJ[idxs,:,:]
+            timeyear = timeyear[idxs]
+            dates = dates[idxs]
+            y = y[idxs]
 
         y = y/normalization_streamflow
         
@@ -72,7 +82,7 @@ class ComputeStatistics():
             low = min_precip
             nbblocks = len(groups_precip)
             for k in range(nblocks):
-                up = p_sorted[int((n-1)//(nblocks-1))*k]
+                up = p_sorted[int((n-1)//(nblocks))*(k+1)]
                 if k==nblocks-1:
                     up += 10000
                 groups_precip.append( (low,up) )
@@ -220,11 +230,17 @@ class ComputeStatistics():
             site2peak_esti_noweight[k] = np.max(H_avg[k,:])
             site2mean_esti_noweight[k] = np.mean(H_avg[k,:])
 
-        
+
+        weights_events = np.tile(X[:,0].reshape(-1,1), (1,m))
+        weighted_avg_RRD = np.mean(H * weights_events, axis=0)/np.mean(X[:,0]),
+        np.save(os.path.join(save_folder, 'weighted_avg_RRD.npy'), weighted_avg_RRD)
+
+            
         np.save(os.path.join(save_folder, 'H_weighted_avg.npy'), H_weighted_avg)
         np.save(os.path.join(save_folder, 'H_avg.npy'), H_avg)
         np.save(os.path.join(save_folder, 'group2means_wetness.npy'), group2means_wetness)
         np.save(os.path.join(save_folder, 'group2means_precip.npy'), group2means_precip)
+        np.save(os.path.join(save_folder, 'dates.npy'), timeyear)
 
         import pickle
         stats_esti = {'area': site2area_esti, 'peak': site2peak_esti, 'mean':site2mean_esti}

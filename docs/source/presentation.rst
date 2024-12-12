@@ -16,7 +16,7 @@ We introduce a new knowledge-guided but data-driven methodology to estimate the 
 
 - the intensity of the precipitation event
 
-- information describing the catchment condition induced by past events such weighted sum of past precipitation and potential evapotranspiration. 
+- information describing the catchment condition induced by past events such as weighted sum of past precipitation and potential evapotranspiration. 
 
 One can easily add additional features to our model. A typical example is the cosine and sine of the time from January 1st to allow the model to estimate a seasonality pattern. Another example is a time variable allowing the model to learn potential change over time of the catchment behaviour.
 

@@ -53,6 +53,32 @@ def nse(observed, simulated):
     return nse_value
 
 
+def compute_smoothing_penalty_matrix(n, knots):
+    # Create an n x n zero matrix
+    matrix = np.zeros((n, n))
+    
+    # Set the diagonal to 6
+    np.fill_diagonal(matrix, 6)
+    
+    # Set the subdiagonal and superdiagonal to -4
+    np.fill_diagonal(matrix[1:], -4)
+    np.fill_diagonal(matrix[:, 1:], -4)
+    
+    # Set the sub-subdiagonal and super-superdiagonal to -1
+    np.fill_diagonal(matrix[2:], 1)
+    np.fill_diagonal(matrix[:, 2:], 1)
+
+    matrix[0,:2] = [1,-2]
+    matrix[1,:2] = [-2,5]
+    matrix[-2,-2:] = [5,-2]
+    matrix[-1,-2:] = [-2,1]
+
+    d_knots = np.diff(knots)
+    matrix = matrix * (d_knots.reshape(-1,1) @ d_knots.reshape(1,-1))
+    
+    return matrix
+
+
 def build_custom_matrix(n):
     """
     Build an n x n matrix with the following structure:
