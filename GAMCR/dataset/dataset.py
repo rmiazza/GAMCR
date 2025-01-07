@@ -190,6 +190,7 @@ class Dataset():
         nfiles : int, optional
             The preprocessed data will be splitted and saved in different files (to potentially speed up the loading process of the data if only some fraction of the total dataset is needed). This integer specifies the number of files used to split the data.
         """
+        nfiles += 1
         init = self.init
         m = self.m
         import os

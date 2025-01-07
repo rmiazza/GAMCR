@@ -119,7 +119,6 @@ class Trainer():
         # S += gam._H # add any user-chosen minumum penalty to the diagonal
         S = sp.sparse.diags(np.ones(m) * np.sqrt(EPS))
         P = scipy.linalg.block_diag(*ls_P)
-        print(P.shape, S.shape)
 
         idxs_filter = np.where(ls_X[0][:,0]>2)[0]
         a = np.mean(self.gam._modelmat(ls_X[0])[idxs_filter,:], axis=0)
@@ -132,7 +131,6 @@ class Trainer():
         #E = self.gam.pygams[0]._cholesky(S + n*P + lam_global*n*smooth_P, sparse=False, verbose=self.gam.pygams[0].verbose)
         E = self.gam.pygams[0]._cholesky(S + n*P + n*lam_global*smooth_P, sparse=False, verbose=self.gam.pygams[0].verbose)
         self.gam.pygams[0].statistics_['m_features'] = ls_X[0].shape[1]
-        print(self.gam.pygams[0].terms.get_coef_indices(-1))
         min_n_m = np.min([m, n])
         Dinv = np.zeros((min_n_m + m, m)).T
     
@@ -227,14 +225,13 @@ class Trainer():
             error = np.linalg.norm(Qhat-y)
             if ite!=0 and (error>loss[-1]):
                 lr = lr / 4
-                print('New lr: ', lr)
                 coef_new = deepcopy(coef_old)
             else:
                 loss.append(error)
     
             if ite%100==0:
                 print('Error: ', error)
-                print(diff)
+                print('Learning rate: ', lr)
                 if not(save_folder is None):
                     gamcoeffs = []
                     for gam in self.gam.pygams:

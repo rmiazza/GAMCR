@@ -118,7 +118,7 @@ nbsphinx_thumbnails = {
     "tutorials/notebooks/generating-simulated-data": "_static/tutorials/simulated_data.png",
     "tutorials/notebooks/visualizing-results": "_static/tutorials/nb_visualization.png",
     "tutorials/notebooks/running-the-model": "_static/tutorials/quickstart-on-simulated-data.png",
-    "tutorials/notebooks/real-data": "_static/tutorials/regu_path_cat_zoom.png",
+    "tutorials/notebooks/overview": "_static/gamcr_readme.png",
 }
 
 

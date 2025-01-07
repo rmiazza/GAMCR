@@ -25,10 +25,10 @@ def rainbow_colors(K = 10):
 
 
 def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=True, alpha=0.1, maxT=None):
-    folder = os.path.join(site_folder, "results")
-    H_weighted_avg = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
-    H_avg = np.load(os.path.join(folder, 'H_avg.npy'))
-    m = H_avg.shape[1]
+    folder = os.path.join(site_folder, "results", "detailedresults")
+    NRF_avg = np.load(os.path.join(folder, 'NRF_avg.npy'))
+    RRD_avg = np.load(os.path.join(folder, 'NRF_avg.npy'))
+    m = RRD_avg.shape[1]
 
     with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
         groups_precip = pickle.load(handle)
@@ -45,8 +45,8 @@ def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=
         group2nbpoints = pickle.load(handle)
 
     try:
-        H_weighted_avg_true = np.load(os.path.join(folder, 'H_weighted_avg_true.npy'))
-        H_avg_true = np.load(os.path.join(folder, 'H_avg_true.npy'))
+        NRF_avg_true = np.load(os.path.join(folder, 'NRF_avg_true.npy'))
+        RRD_avg_true = np.load(os.path.join(folder, 'RRD_avg_true.npy'))
         with open(os.path.join(folder, 'group2nbpoints_true.pkl'), 'rb') as handle:
             group2nbpoints_true = pickle.load(handle)
         true_tfs = True
@@ -94,14 +94,14 @@ def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=
                 idx2legend[k] = '{0}-{1}'.format(low,upleg)
                 
             if weighted:
-                a[id_x][id_y].plot(x[:maxT],H_weighted_avg[nQ*j+k,:maxT], color=colors[id_col])
+                a[id_x][id_y].plot(x[:maxT],NRF_avg[nQ*j+k,:maxT], color=colors[id_col])
                 if true_tfs:
-                    a[id_x][id_y].plot(x[:maxT],H_weighted_avg_true[nQ*j+k,:maxT], linestyle='--', color=colors[id_col])
+                    a[id_x][id_y].plot(x[:maxT],NRF_avg_true[nQ*j+k,:maxT], linestyle='--', color=colors[id_col])
                 a[id_x][id_y].set_ylabel('NRF', fontsize=14)
             else:
-                a[id_x][id_y].plot(x[:maxT],H_avg[nQ*j+k,:maxT], color=colors[id_col])
+                a[id_x][id_y].plot(x[:maxT],RRD_avg[nQ*j+k,:maxT], color=colors[id_col])
                 if true_tfs:
-                    a[id_x][id_y].plot(x[:maxT],H_avg[nQ*j+k,:maxT],linestyle='--', color=colors[id_col])
+                    a[id_x][id_y].plot(x[:maxT],RRD_avg[nQ*j+k,:maxT],linestyle='--', color=colors[id_col])
                 a[id_x][id_y].set_ylabel('RRD', fontsize=14)
                     
     for idx in range(K):
@@ -117,10 +117,10 @@ def show_tf_p_q(site_folder, site, stratif_wetness=True, show_CI=True, weighted=
 
 
 def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_CI=True, alpha=0.1, maxT=None, dataERRA=None, figname=None):
-    folder = os.path.join(site_folder, "results")
-    H_weighted_avg = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
-    H_avg = np.load(os.path.join(folder, 'H_avg.npy'))
-    m = H_avg.shape[1]
+    folder = os.path.join(site_folder, "results", "detailedresults")
+    NRF_avg = np.load(os.path.join(folder, 'NRF_avg.npy'))
+    RRD_avg = np.load(os.path.join(folder, 'RRD_avg.npy'))
+    m = RRD_avg.shape[1]
     
     with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
         groups_precip = pickle.load(handle)
@@ -141,8 +141,8 @@ def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_
     else:
         K = nJ
     try:
-        H_weighted_avg_true = np.load(os.path.join(folder, 'H_weighted_avg_true.npy'))
-        H_avg_true = np.load(os.path.join(folder, 'H_avg_true.npy'))
+        NRF_avg_true = np.load(os.path.join(folder, 'NRF_avg_true.npy'))
+        RRD_avg_true = np.load(os.path.join(folder, 'RRD_avg_true.npy'))
         with open(os.path.join(folder, 'group2nbpoints_true.pkl'), 'rb') as handle:
             group2nbpoints_true = pickle.load(handle)
         true_tfs = True
@@ -174,7 +174,7 @@ def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_
                 tit_legend = 'Antecedent wetness'
             else:
                 idx = j
-                low,up = np.round(group2p_range[nJ*j+k], 1)
+                low,up = np.round(group2p_range[nQ*j+k], 1)
                 upleg = up if idx!=(nJ-1) else 'max'
                 idx2legends[idx] = '{0}-{1}'.format(low,upleg)
                 tit_legend = 'Precipitation intensity'
@@ -182,11 +182,11 @@ def show_tf_p_or_q(site_folder, site, stratif_wetness=True, weighted=True, show_
 
             if group2nbpoints[nQ*j+k]>1:
                 norm[idx] += group2nbpoints[nQ*j+k]
-                tf[idx,:] += H_weighted_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
+                tf[idx,:] += NRF_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
             if true_tfs:
                 if group2nbpoints_true[nQ*j+k]>1:
                     norm_true[idx] += group2nbpoints_true[nQ*j+k]
-                    tf_true[idx,:] += H_weighted_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+                    tf_true[idx,:] += NRF_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
     for idx in range(K):
         tf[idx,:] /= norm[idx]
     for idx in range(K):
@@ -233,11 +233,11 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
     #colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w', '#FFA500', '#800080', '#A52A2A', '#FFC0CB', '#00FF00', '#808000', '#000080', '#008080']
     id_site = 0
     for site in all_sites:
-        folder = os.path.join(global_path, site, 'results')
+        folder = os.path.join(global_path, site, 'results', "detailedresults")
 
-        H_weighted_avg = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
-        H_avg = np.load(os.path.join(folder, 'H_avg.npy'))
-        m = H_avg.shape[1]
+        NRF_avg = np.load(os.path.join(folder, 'NRF_avg.npy'))
+        RRD_avg = np.load(os.path.join(folder, 'RRD_avg.npy'))
+        m = RRD_avg.shape[1]
     
             
         with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
@@ -255,8 +255,8 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
             group2nbpoints = pickle.load(handle)
 
         try:
-            H_weighted_avg_true = np.load(os.path.join(folder, 'H_weighted_avg_true.npy'))
-            H_avg_true = np.load(os.path.join(folder, 'H_avg_true.npy'))
+            NRF_avg_true = np.load(os.path.join(folder, 'NRF_avg_true.npy'))
+            RRD_avg_true = np.load(os.path.join(folder, 'RRD_avg_true.npy'))
             with open(os.path.join(folder, 'group2nbpoints_true.pkl'), 'rb') as handle:
                 group2nbpoints_true = pickle.load(handle)
             true_tfs = True
@@ -284,20 +284,20 @@ def show_tf_global(global_path, all_sites, log_abs=False, weighted=True, alpha=0
                 if weighted:
                     if group2nbpoints[nQ*j+k]>1:
                         norm += group2nbpoints[nQ*j+k]
-                        tf += H_weighted_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
+                        tf += NRF_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
 
                     if true_tfs:
                         if group2nbpoints_true[nQ*j+k]>1:
                             norm_true += group2nbpoints_true[nQ*j+k]
-                            tf_true += H_weighted_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+                            tf_true += NRF_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
                 else:
                     if group2nbpoints[nQ*j+k]>1:
                         norm += group2nbpoints[nQ*j+k]
-                        tf += H_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
+                        tf += RRD_avg[nQ*j+k,:] * group2nbpoints[nQ*j+k]
                     if true_tfs:
                         if group2nbpoints_true[nQ*j+k]>1:
                             norm_true += group2nbpoints_true[nQ*j+k]
-                            tf_true += H_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+                            tf_true += RRD_avg_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
 
             
 
@@ -399,11 +399,11 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
     site2peaklag_true_noweight = {}
 
     for site in all_sites:
-        folder = os.path.join(global_path, site, 'results')
+        folder = os.path.join(global_path, site, 'results', "detailedresults")
 
-        H_weighted_avgbis = np.load(os.path.join(folder, 'H_weighted_avg.npy'))
-        H_avgbis = np.load(os.path.join(folder, 'H_avg.npy'))
-        m = H_avgbis.shape[1]
+        NRF_avgbis = np.load(os.path.join(folder, 'NRF_avg.npy'))
+        RRD_avgbis = np.load(os.path.join(folder, 'RRD_avg.npy'))
+        m = RRD_avgbis.shape[1]
         
         with open(os.path.join(folder, 'groups_precip.pkl'), 'rb') as handle:
             groups_precip = pickle.load(handle)
@@ -424,10 +424,10 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
 
         K = nJ
         try:
-            H_weighted_avgbis_true = np.load(os.path.join(folder, 'H_weighted_avg_true.npy'))
-            H_avgbis_true = np.load(os.path.join(folder, 'H_avg_true.npy'))
-            H_weighted_avg_true = np.zeros((K,m))
-            H_avg_true = np.zeros((K,m))
+            NRF_avgbis_true = np.load(os.path.join(folder, 'NRF_avg_true.npy'))
+            RRD_avgbis_true = np.load(os.path.join(folder, 'RRD_avg_true.npy'))
+            NRF_avg_true = np.zeros((K,m))
+            RRD_avg_true = np.zeros((K,m))
             group2means_precip_true = np.load(os.path.join(folder, 'group2means_precip_true.npy'))
             group2means_wetness_true = np.load(os.path.join(folder, 'group2means_wetness_true.npy'))
 
@@ -441,8 +441,8 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
             true_tfs = False
             pass
 
-        H_weighted_avg = np.zeros((K,m))
-        H_avg = np.zeros((K,m))
+        NRF_avg = np.zeros((K,m))
+        RRD_avg = np.zeros((K,m))
         quantiles_precip = np.zeros(K)
         norm = np.zeros(K)
         for j in range(K):
@@ -450,21 +450,21 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
                 idx = j
                 if group2nbpoints[nQ*j+k]>1:
                     norm[idx] += group2nbpoints[nQ*j+k]
-                    H_weighted_avg[idx,:] += H_weighted_avgbis[nQ*j+k,:] * group2nbpoints[nQ*j+k]
-                    H_avg[idx,:] += H_avgbis[nQ*j+k,:] * group2nbpoints[nQ*j+k]
+                    NRF_avg[idx,:] += NRF_avgbis[nQ*j+k,:] * group2nbpoints[nQ*j+k]
+                    RRD_avg[idx,:] += RRD_avgbis[nQ*j+k,:] * group2nbpoints[nQ*j+k]
                     quantiles_precip[idx] += group2means_precip[nQ*j+k] * group2nbpoints[nQ*j+k]
 
                 if true_tfs:
                     if group2nbpoints_true[nQ*j+k]>1:
                         norm_true[idx] += group2nbpoints_true[nQ*j+k]
-                        H_weighted_avg_true[idx,:] += H_weighted_avgbis_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
-                        H_avg_true[idx,:] += H_avgbis_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+                        NRF_avg_true[idx,:] += NRF_avgbis_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
+                        RRD_avg_true[idx,:] += RRD_avgbis_true[nQ*j+k,:] * group2nbpoints_true[nQ*j+k]
                         quantiles_precip_true[idx] += group2means_precip_true[nQ*j+k] * group2nbpoints_true[nQ*j+k]
         for idx in range(K):
-            H_weighted_avg[idx,:] /= norm[idx]
+            NRF_avg[idx,:] /= norm[idx]
             quantiles_precip[idx] /= norm[idx]
             if true_tfs:
-                H_weighted_avg_true[idx,:] /= norm_true[idx]
+                NRF_avg_true[idx,:] /= norm_true[idx]
                 quantiles_precip_true[idx] /= norm_true[idx]
 
         site2area_esti[site] = np.zeros(K)
@@ -479,15 +479,15 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
         site2peaklag_esti_noweight[site] = np.zeros(K)
 
         for k in range(K):
-            site2area_esti[site][k] = np.sum(H_weighted_avg[k,:])
-            site2peak_esti[site][k] = np.max(H_weighted_avg[k,:])
-            site2mean_esti[site][k] = np.sum(H_weighted_avg[k,:]*np.arange(m)/np.sum(H_weighted_avg[k,:]))
-            site2peaklag_esti[site][k] = np.argmax(H_weighted_avg[k,:])
+            site2area_esti[site][k] = np.sum(NRF_avg[k,:])
+            site2peak_esti[site][k] = np.max(NRF_avg[k,:])
+            site2mean_esti[site][k] = np.sum(NRF_avg[k,:]*np.arange(m)/np.sum(NRF_avg[k,:]))
+            site2peaklag_esti[site][k] = np.argmax(NRF_avg[k,:])
 
-            site2area_esti_noweight[site][k] = np.sum(H_avg[k,:])
-            site2peak_esti_noweight[site][k] = np.max(H_avg[k,:])
-            site2mean_esti_noweight[site][k] = np.sum(H_avg[k,:]*np.arange(m)/np.sum(H_avg[k,:]))
-            site2peaklag_esti_noweight[site][k] = np.argmax(H_avg[k,:])
+            site2area_esti_noweight[site][k] = np.sum(RRD_avg[k,:])
+            site2peak_esti_noweight[site][k] = np.max(RRD_avg[k,:])
+            site2mean_esti_noweight[site][k] = np.sum(RRD_avg[k,:]*np.arange(m)/np.sum(RRD_avg[k,:]))
+            site2peaklag_esti_noweight[site][k] = np.argmax(RRD_avg[k,:])
 
         if true_tfs:
             
@@ -502,17 +502,17 @@ def show_vs_precip_intensity(global_path, all_sites, weighted=True, log_ordo=Fal
             site2quantiles_true[site] = quantiles_precip_true
             site2peaklag_true_noweight[site] = np.zeros(K)
 
-            mtrue = H_weighted_avg_true.shape[1]
+            mtrue = NRF_avg_true.shape[1]
             for k in range(K):
-                site2area_true[site][k] = np.sum(H_weighted_avg_true[k,:])
-                site2peak_true[site][k] = np.max(H_weighted_avg_true[k,:])
-                site2mean_true[site][k] = np.sum(H_weighted_avg_true[k,:]*np.arange(mtrue)/np.sum(H_weighted_avg_true[k,:]))
-                site2peaklag_true[site][k] = np.argmax(H_weighted_avg_true[k,:])
+                site2area_true[site][k] = np.sum(NRF_avg_true[k,:])
+                site2peak_true[site][k] = np.max(NRF_avg_true[k,:])
+                site2mean_true[site][k] = np.sum(NRF_avg_true[k,:]*np.arange(mtrue)/np.sum(NRF_avg_true[k,:]))
+                site2peaklag_true[site][k] = np.argmax(NRF_avg_true[k,:])
     
-                site2area_true_noweight[site][k] = np.sum(H_avg_true[k,:])
-                site2peak_true_noweight[site][k] = np.max(H_avg_true[k,:])
-                site2mean_true_noweight[site][k] = np.sum(H_avg_true[k,:]*np.arange(mtrue)/np.sum(H_avg_true[k,:]))
-                site2peaklag_true_noweight[site][k] = np.argmax(H_avg_true[k,:])
+                site2area_true_noweight[site][k] = np.sum(RRD_avg_true[k,:])
+                site2peak_true_noweight[site][k] = np.max(RRD_avg_true[k,:])
+                site2mean_true_noweight[site][k] = np.sum(RRD_avg_true[k,:]*np.arange(mtrue)/np.sum(RRD_avg_true[k,:]))
+                site2peaklag_true_noweight[site][k] = np.argmax(RRD_avg_true[k,:])
     
     
     if true_tfs:
