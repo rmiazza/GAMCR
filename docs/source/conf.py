@@ -46,6 +46,7 @@ sys.path[:0] = [str(HERE.parent), str(HERE / "extensions")]
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.githubpages",
     "sphinx.ext.viewcode",
     "nbsphinx",
     "nbsphinx_link",
