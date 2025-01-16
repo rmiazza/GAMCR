@@ -72,7 +72,7 @@ for (ite in 1:6){
             if (GISID == '48'){
                 zz <- ERRA(p=p, q=q, m=m, h=h, agg=2, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat$year[init:length(dat$p)]<=2017), 1, 0))
             }else{
-                 zz <- ERRA(p=p, q=q, m=m, h=h, agg=2, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat$year[init:length(dat$p)]<=2017), 1, 0))
+                 zz <- ERRA(p=p, q=q, m=m, h=h,  xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat$year[init:length(dat$p)]<=2017), 1, 0))
             }
             with(zz, {                                          # write the output to files
               fwrite(Qcomp, paste0(fileID, "_Qcomp_", options, ".txt"), sep="\t")
