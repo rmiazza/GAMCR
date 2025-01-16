@@ -13,7 +13,7 @@ all_h = c(1,2,2,2,1,2)
 all_m = c(50,25,70,50,50,50)
 
 all_EZG = c(58.7,125.7,47.5, 32.4,34.3,185.1)
-all_modes = c("streamflow") # c("training","complete")
+all_modes = c("streamflow","training","complete")
 for (ite in 1:6){ 
     GISID = allGISIDs[ite]
     h = all_h[ite]
@@ -69,7 +69,11 @@ for (ite in 1:6){
         #------------------------------------------------------------------------------------------------------------------------------
         #snow free season values:
         if (mode == "streamflow"){
-            zz <- ERRA(p=p, q=q, m=m, h=h, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat$year[init:length(dat$p)]<=2017), 1, 0))
+            if (GISID == '48'){
+                zz <- ERRA(p=p, q=q, m=m, h=h, agg=2, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat$year[init:length(dat$p)]<=2017), 1, 0))
+            }else{
+                 zz <- ERRA(p=p, q=q, m=m, h=h, agg=2, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat$year[init:length(dat$p)]<=2017), 1, 0))
+            }
             with(zz, {                                          # write the output to files
               fwrite(Qcomp, paste0(fileID, "_Qcomp_", options, ".txt"), sep="\t")
             })
