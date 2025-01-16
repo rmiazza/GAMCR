@@ -12,11 +12,13 @@ allGISIDs = c('44', '48', '50', '58', '88','112')
 all_h = c(1,2,2,2,1,2)
 all_m = c(50,25,70,50,50,50)
 
+all_EZG = c(58.7,125.7,47.5, 32.4,34.3,185.1)
+all_modes = c("streamflow") # c("training","complete")
 for (ite in 1:6){ 
     GISID = allGISIDs[ite]
     h = all_h[ite]
     m = all_m[ite]
-    for (mode in c("training","complete")){
+    for (mode in all_modes){
         dat <- read.csv(sprintf("../RES_GAMCR/real_data_paper_v2_seasonal/%s/data_%s.txt", GISID, GISID), header=TRUE, sep=",")    #this is the data file
         dat$date <- as.POSIXct(dat$date, format = "%Y-%m-%d %H:%M:%S")
 
@@ -60,26 +62,33 @@ for (ite in 1:6){
         fileID <- sprintf("./output_ERRA_forGAMCR/GISID-%s/%s", GISID, mode)
         
         p <- dat$p[init:length(dat$p)]
-        q <- dat$q[init:length(dat$q)]             
+        q <- dat$q[init:length(dat$q)] 
+
+        q <- q * 3600 * 1000 / (all_EZG[ite] * 1000000)
         
         #------------------------------------------------------------------------------------------------------------------------------
         #snow free season values:
-        
-        if (GISID == '48'){
+        if (mode == "streamflow"){
+            zz <- ERRA(p=p, q=q, m=m, h=h, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat$year[init:length(dat$p)]<=2017), 1, 0))
+            with(zz, {                                          # write the output to files
+              fwrite(Qcomp, paste0(fileID, "_Qcomp_", options, ".txt"), sep="\t")
+            })
+        } else { if (GISID == '48'){
             
             zz <- ERRA(p=p, q=q, m=m, h=h, agg=2, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=snowfree) 
-        }else{
-            zz <- ERRA(p=p, q=q, m=m, h=h, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=snowfree) 
-
-            }
-        # <- ERRA(p=p, q=q, m=50, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=ifelse((dat_filtered$year<=2017), 1, 0))
-        
-        with(zz, {                                          # write the output to files
+            }else{
+                zz <- ERRA(p=p, q=q, m=m, h=h, xknots=c(5,40), xknot_type="even", robust=FALSE, show_top_xknot = TRUE, Qfilter=snowfree) 
+    
+                }
+          with(zz, {                                          # write the output to files
           fwrite(peakstats, paste0(fileID, "_peakstats_", options, ".txt"), sep="\t") 
           fwrite(wtd_avg_RRD, paste0(fileID, "_avgRRD_", options, ".txt"), sep="\t") 
           fwrite(NRF, paste0(fileID, "_NRF_", options, ".txt"), sep="\t") 
-        })
+            })
+        }
+    
+        
+        
     }
 }
-#fwrite(Qcomp, paste0(fileID, "_Qcomp_", options, ".txt"), sep="\t")
 
