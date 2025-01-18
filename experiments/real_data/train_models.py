@@ -56,7 +56,7 @@ for GISID in all_GISID:
     y = y[idxs]
     
     # Keeping only the time points with minimum precipitation intensity for training
-    idxs = np.where(X[:,0]>=1)[0]
+    idxs = np.where(X[:,0]>=0.05)[0]
     X = X[idxs,:]
     matJ = matJ[idxs,:,:]
     timeyear = timeyear[idxs]
