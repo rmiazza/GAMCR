@@ -35,12 +35,8 @@ ls_global_lambs = [0.000001 * (10**i) for i in range(3,10)]
 
 
 for GISID in all_GISID:
-    if GISID in ['184','47','112','150','27']:
-        lam = ls_lambs[0]
-        global_lam = ls_global_lambs[4]
-    else:
-        lam = ls_lambs[1]
-        global_lam = ls_global_lambs[3]
+    lam = ls_lambs[1]
+    global_lam = ls_global_lambs[3]
 
     model = GAMCR.model.GAMCR()
     GISIDpath = os.path.join(save_folder, str(GISID), 'data')

@@ -20,7 +20,7 @@ all_GISID = [el for el in list(os.walk(data_folder))[0][1] if not any(c in el fo
 
 all_data = True
 
-for site in all_GISID: #['184','47','112','150', '27']: 
+for site in all_GISID:
     name_model = '{0}_best_model.pkl'.format(site)
     model = GAMCR.model.GAMCR(lam=0.1)
     datapath = os.path.join(data_folder, site, name_model)
