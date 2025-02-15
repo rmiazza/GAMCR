@@ -62,4 +62,4 @@ for GISID in all_GISID:
     model.load_model(os.path.join(GISIDpath, 'params.pkl'),  lam=lam)
     name_model = '{0}_best_model'.format(GISID)
     save_folder_GISID = os.path.join(save_folder, str(GISID))
-    loss = model.train(X, matJ, y, dates=dates, lr=1e-1, max_iter=30000, warm_start=False, save_folder=save_folder_GISID, name_model=name_model, normalization_loss=1, lam_global=global_lam)
+    loss = model.train(X, matJ, y, dates=dates, lr=1e-1, max_iter=600000, warm_start=False, save_folder=save_folder_GISID, name_model=name_model, normalization_loss=1, lam_global=global_lam)
