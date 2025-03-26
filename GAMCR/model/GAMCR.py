@@ -29,7 +29,7 @@ class GAMCR(Dataset, Trainer, ComputeStatistics):
     predict_streamflow(matJ)
         Predict the hydrograph from the matrix matJ (obtained from the method 'get_GAMdesign' of the class 'Dataset').
     """
-    def __init__(self, max_lag=24*30*2, features={}, n_splines=10,  lam=10):
+    def __init__(self, max_lag=24*10, features={}, n_splines=10,  lam=10):
         Dataset.__init__(self, max_lag=max_lag, features=features, n_splines=n_splines,  lam=lam)
         Trainer.__init__(self)
         ComputeStatistics.__init__(self)

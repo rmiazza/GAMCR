@@ -51,15 +51,7 @@ for GISID in all_GISID:
     dates = dates[idxs]
     y = y[idxs]
     
-    # Keeping only the time points with minimum precipitation intensity for training
-    idxs = np.where(X[:,0]>=0.05)[0]
-    X = X[idxs,:]
-    matJ = matJ[idxs,:,:]
-    timeyear = timeyear[idxs]
-    dates = dates[idxs]
-    y = y[idxs]
-    
     model.load_model(os.path.join(GISIDpath, 'params.pkl'),  lam=lam)
     name_model = '{0}_best_model'.format(GISID)
     save_folder_GISID = os.path.join(save_folder, str(GISID))
-    loss = model.train(X, matJ, y, dates=dates, lr=1e-1, max_iter=600000, warm_start=False, save_folder=save_folder_GISID, name_model=name_model, normalization_loss=1, lam_global=global_lam)
+    loss = model.train(X, matJ, y, dates=dates, lr=1e-1, max_iter=6000, warm_start=False, save_folder=save_folder_GISID, name_model=name_model, normalization_loss=1, lam_global=global_lam)

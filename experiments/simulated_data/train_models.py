@@ -25,14 +25,6 @@ for site in all_sites:
     X, matJ, y, timeyear, dates = model.load_data(sitepath, max_files=99)
     dates = pd.to_datetime(dates)
     
-    # Keeping only the time points with minimum precipitation intensity for training
-    idxs = np.where(X[:,0]>=0.05)[0]
-    X = X[idxs,:]
-    matJ = matJ[idxs,:,:]
-    timeyear = timeyear[idxs]
-    dates = dates[idxs]
-    y = y[idxs]
-    
     model.load_model(os.path.join(sitepath, 'params.pkl'),  lam=lam)
     name_model = '{0}_best_model'.format(site)
     save_folder_site = os.path.join(save_folder, str(site))

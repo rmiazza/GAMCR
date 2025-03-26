@@ -37,7 +37,65 @@ def filter_col_name(colname):
         return low, float(colname[istart:i])
     
     
-def get_data_from_ERRA(path_ERRA, mode="training"):
+    
+def get_data_from_ERRA(path_ERRA, mode="training", removing_first_ensemble=False, changing_min1stbin=None):
+    if removing_first_ensemble:
+        idx_start = 1
+    else:
+        idx_start = 0
+    try:
+        dico = {}
+        sites = os.listdir(path_ERRA)
+        allGISID = []
+        for site in sites:
+            nameGISID = ''
+            count = 6
+            nameGISID = site[count:]
+            allGISID.append(nameGISID)
+        for GISID in allGISID:
+            dico[GISID] = {}
+            site = [f for f in sites if f'GISID-{GISID}' in f][0]
+
+            path_site = os.path.join(path_ERRA, site)
+            files = os.listdir(os.path.join(path_ERRA, site))
+            file = [f for f in files if '{0}_NRF'.format(mode) in f][0]
+            path_NRF = os.path.join(path_site, file)
+            df = pd.read_csv(path_NRF, sep='\t')
+            colnames_nrf = [col for col in df.columns if 'NRF' in col]
+            groups_precip = []
+            for colname in colnames_nrf:
+                groups_precip.append(filter_col_name(colname))
+            dico[GISID]['groups_precip'] = groups_precip[idx_start:]
+            if not(changing_min1stbin is None):
+                if not(removing_first_ensemble):
+                    dico[GISID]['groups_precip'][0] = (dico[GISID]['groups_precip'][0][0], changing_min1stbin)
+                    dico[GISID]['groups_precip'][1] = (changing_min1stbin,dico[GISID]['groups_precip'][1][1])
+                else:
+                    dico[GISID]['groups_precip'][0] = (changing_min1stbin,dico[GISID]['groups_precip'][0][1])
+            dico[GISID]['lagtime'] =  df.loc[:,'lagtime'].values
+            NRF = np.zeros((len(colnames_nrf)-idx_start, len(dico[GISID]['lagtime'])))
+            for k, col in enumerate(colnames_nrf[idx_start:]):
+                NRF[k,:] = df.loc[:,col].values
+            dico[GISID]['group2NRF'] = NRF
+
+            # Error bars
+            colnames_se = [col for col in df.columns if 'se_p' in col]
+            SE = np.zeros((len(colnames_se)-idx_start, len(dico[GISID]['lagtime'])))
+            for k, col in enumerate(colnames_se[idx_start:]):
+                SE[k,:] = df.loc[:,col].values
+            dico[GISID]['group2NRF_SE'] = SE
+
+            files = os.listdir(os.path.join(path_ERRA, site))
+            file = [f for f in files if '{0}_avgRRD'.format(mode) in f][0]
+            path_avgRRD = os.path.join(path_site, file)
+            df = pd.read_csv(path_avgRRD, sep='\t')
+            dico[GISID]['lagtime_RRD'] =  df.loc[:,'lagtime'].values
+            dico[GISID]['wtd_avg_RRD_p'] =  df.loc[:,'wtd_avg_RRD_p|all'].values
+        return dico
+    except:
+        return None
+
+def get_data_from_ERRA_old2(path_ERRA, mode="training"):
     dico = {}
     sites = os.listdir(path_ERRA)
     allGISID = []
