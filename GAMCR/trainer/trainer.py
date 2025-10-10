@@ -3,7 +3,8 @@ from copy import deepcopy
 from tqdm import tqdm
 import numpy as np
 import os
-from ..utils import build_custom_matrix, compute_smoothing_penalty_matrix
+from ..utils import build_custom_matrix
+# from ..utils import compute_smoothing_penalty_matrix
 
 
 def ReLU(x, delta=1e-3):
@@ -113,7 +114,7 @@ class Trainer():
                        a.reshape(1, -1))
             )
         )
-        # smooth_P = np.kron(compute_smoothing_penalty_matrix(self.L, self.knots_splines), np.dot(a.reshape(-1,1), a.reshape(1,-1)) )
+        # smooth_P = np.kron(compute_smoothing_penalty_matrix(self.L, self.knots_splines), np.dot(a.reshape(-1,1), a.reshape(1,-1)))
 
         # if we dont have any constraints, then do cholesky now
         self.gam.pygams[0].statistics_['m_features'] = ls_X[0].shape[1] * len(self.gam.pygams)
@@ -153,7 +154,7 @@ class Trainer():
                     'QR decomposition produced NaN or Inf. ' 'Check X data.'
                 )
 
-            # need to recompute the number of singular values
+            # Need to recompute the number of singular values
             min_n_m = np.min([m, n])
             Dinv = np.zeros((m, min_n_m))
 
@@ -163,12 +164,13 @@ class Trainer():
             np.fill_diagonal(Dinv, d**-1)  # invert the singular values
             U1 = U[:min_n_m, :min_n_m]  # keep only top corner of U
 
-            # update coefficients
+            # Update coefficients
             B = Vt.T.dot(Dinv).dot(U1.T).dot(Q.T)
 
         normalization_loss = n
         Q = (WB.T).dot(WB) / normalization_loss + S + P + lam_global*smooth_P
         q = (WB.T).dot(pseudo_data) / normalization_loss
+
         loss = []
         for ite in tqdm(range(max_iter)):
 
@@ -230,4 +232,5 @@ class Trainer():
             return loss
 
         print('did not converge')
+
         return loss
