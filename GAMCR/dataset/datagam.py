@@ -96,28 +96,36 @@ class DataGAM():
         m_features : int
             Total number of features
         coeffs : array, optional
-            If not None, the coefficients of the L GAMs are set using the coefficients provided in coeffs. coeffs should be of dimension:  L x (number of columns of the matrix returned by the '_modelmat' method)
+            If not None, the coefficients of the L GAMs are set using the
+            coefficients provided in coeffs. coeffs should be of dimension:
+            L x (number of columns of the matrix returned by the '_modelmat' method)
         """
         gam = LinearGAM(terms='auto', n_splines=self.n_splines, lam=self.lam, max_iter=20)
+
         # validate parameters
         gam._validate_params()
+
         # validate data-dependent parameters
-        gam._validate_data_dep_params(np.zeros((1,m_features)))
+        gam._validate_data_dep_params(np.zeros((1, m_features)))
+
         # set up logging
         if not hasattr(gam, 'logs_'):
             gam.logs_ = defaultdict(list)
+
         gam.statistics_ = {}
         gam.statistics_['n_samples'] = 1
         gam.statistics_['m_features'] = m_features
         gam.edge_knots_ = edge_knots
         self.edge_knots_ = edge_knots
-        self.m_features =  m_features
+        self.m_features = m_features
+
         self.pygams = []
         for l in range(self.L):
             self.pygams.append(deepcopy(gam))
-        if not(coeffs is None):
+
+        if not (coeffs is None):
             for l in range(self.L):
-                self.pygams[l].coef_ = coeffs[l,:]
+                self.pygams[l].coef_ = coeffs[l, :]
 
     def _modelmat(self, X):
         """Builds a model matrix out of the spline basis for each feature
@@ -125,8 +133,14 @@ class DataGAM():
         Parameters
         ----------
         X : array
-            Design matrix of the GAM compute from the method 'get_design'. X has dimension: number of timepoints x number of features.
+            Design matrix of the GAM compute from the method 'get_design'.
+            X has dimension: number of timepoints x number of features.
         """
-        return self.pygams[0]._modelmat(X).A
+        # return self.pygams[0]._modelmat(X).A
+        # -> original code, depreciated in newer SciPy versions (>=1.14)
 
-    
+        A = self.pygams[0]._modelmat(X)
+        # Convert sparse matrices to dense arrays explicitly
+        if hasattr(A, "toarray"):
+            A = A.toarray()
+        return A

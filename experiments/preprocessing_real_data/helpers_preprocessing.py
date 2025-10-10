@@ -246,7 +246,7 @@ def process_hydro(GISID, path_Q, df_catchment_names, path_daily):
         pd.DataFrame: A cleaned and continuous DataFrame with columns:
             - 'datetime': Timestamps of hourly discharge records.
             - 't': Corresponding time in fractional years.
-            - 'discharge': Hourly discharge (m3/s?).
+            - 'discharge': Hourly discharge (m3/s).
 
     Notes:
         - Missing hourly data are filled proportionally using daily discharge totals.

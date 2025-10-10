@@ -179,48 +179,72 @@ class Dataset():
             self.save_model_parameters(path)
 
     def save_batch(self, save_folder, datafile, nstart=0, nfiles=100):
-        """Preprocess and save the data for all sites in allGISID.
-        
+        """Preprocess and save model input data in multiple batches for all sites/catchments.
+
+        This method loads, processes, and partitions the dataset associated with
+        a given site. The processed data and model design matrices are saved
+        to disk in batches of '.npy' files to facilitate faster loading and
+        training later.
+
         Parameters
         ----------
         save_folder : str
-            Path where we can find a folder '{site}' for the site under study. In this folder, the .txt file with the data at the corresponding site should be saved.
+            Path where we can find a folder '{site}' for the site under study.
+            In this folder, the .txt file with the data at the corresponding
+            site should be saved.
+        datafile : str
+            Site-specific folder name containing the raw data file to process.
         nstart : int, optional
-            Number of older time points that should be discarded.
+            Number of older timesteps to discard (default: 0).
         nfiles : int, optional
-            The preprocessed data will be splitted and saved in different files (to potentially speed up the loading process of the data if only some fraction of the total dataset is needed). This integer specifies the number of files used to split the data.
+            Number of batches to split the data into (default: 100). Each batch
+            will be saved as a separate '.npy' file for efficient partial loading
+            when only some fraction of the total dataset is needed.
         """
         nfiles += 1
         init = self.init
         m = self.m
-        import os
+
         if not os.path.exists(save_folder):
-            os.makedirs(save_folder)
-        pet_train, x_train, y_train, dates_train, timeyear_train, pet_test, x_test, y_test, dates_test, timeyear_test = self.get_fluxes(datafile, ntest=0, nstart=nstart)
-        
+            os.makedirs(save_folder)  # ensure output directory exists
+
+        # Load and preprocess the dataset
+        (pet_train, x_train, y_train, dates_train, timeyear_train, pet_test,
+         x_test, y_test, dates_test, timeyear_test) = self.get_fluxes(datafile, ntest=0, nstart=nstart)
+
+        # Build the model design matrices
         X = self.get_design(pet_train, x_train, y_train, timeyear_train)
         self.gam.init_gam_from_design(X)
         matJ = self.get_GAMdesign(X, x_train)
-        X = X[m+init:,:]
+
+        # Trim initial transient data points (? comment RM from ChatGPT)
+        X = X[(m+init):, :]
         Y = y_train[m+init:]
         dates = dates_train[m+init:]
         timeyear = timeyear_train[m+init:]
         nt = matJ.shape[0]
-        for l in range(nfiles-1):
-            low, up = l*(nt//nfiles), (l+1)*(nt//nfiles)
-            if (l==(nfiles-2)):
-                up = nt
-            np.save(os.path.join(save_folder,'matJ_{0}.npy'.format(l)), matJ[low:up,:,:])
-            np.save(os.path.join(save_folder,'X_{0}.npy'.format(l)), X[low:up,:])
-            np.save(os.path.join(save_folder,'y_{0}.npy'.format(l)), Y[low:up])
-            np.save(os.path.join(save_folder,'indexes_{0}.npy'.format(l)), np.array([i for i in range(low,up)]))
-            np.save(os.path.join(save_folder,'timeyear_{0}.npy'.format(l)), np.array(timeyear[low:up]))
-            np.save(os.path.join(save_folder,'dates_{0}.npy'.format(l)), np.array(dates[low:up]))
+
+        # Split data into chunks and save each batch
+        for l in range(nfiles - 1):
+            low, up = l * (nt // nfiles), (l + 1) * (nt // nfiles)
+
+            if (l == (nfiles - 2)):
+                up = nt  # ensure last batch includes all remaining samples
+
+            np.save(os.path.join(save_folder, f'matJ_{l}.npy'), matJ[low:up, :, :])
+            np.save(os.path.join(save_folder, f'X_{l}.npy'), X[low:up, :])
+            np.save(os.path.join(save_folder, f'y_{l}.npy'), Y[low:up])
+            np.save(os.path.join(save_folder, f'indexes_{l}.npy'), np.array([i for i in range(low, up)]))
+            np.save(os.path.join(save_folder, f'timeyear_{l}.npy'), np.array(timeyear[low:up]))
+            np.save(os.path.join(save_folder, f'dates_{l}.npy'), np.array(dates[low:up]))
+
+        # Save model parameters
         self.save_model_parameters(save_folder)
-    
+
     def get_fluxes(self, datafile, nstart=0, ntest=0, size_time_window=None):
-        """Load the data and get the PET, precipitation, dates and streamflow time series. This method is called by the 'save_batch' type methods.
-        
+        """Load the data and get the PET, precipitation, dates and streamflow
+        time series. This method is called by the 'save_batch' type methods.
+
         Parameters
         ----------
         datafile : str
@@ -229,37 +253,43 @@ class Dataset():
             Number of older time points that should be discarded.
         """
         df = pd.read_csv(datafile)
-        df = df.fillna(0)
+        df = df.fillna(0)  # why fill NaN if data already pre-processed? RM (also, why with zeros?)
+
         x = df['p'].to_numpy()
         y = df['q'].to_numpy()
         pet = df['pet'].to_numpy()
-        m = self.m
+
         init = self.init
+
         if size_time_window is None:
             size_time_window = len(y)
+
         ntrain = init+size_time_window
         dates = df['date'].to_numpy()
         timeyear = df['timeyear'].to_numpy()
         n = len(dates)
-    
+
         if ntest is None:
             ntest = init+size_time_window
-        
-        y_test = y[nstart+ntrain:min(nstart+ntrain+ntest,n)]
-        x_test = x[nstart+ntrain:min(nstart+ntrain+ntest,n)]
-        pet_test = pet[nstart+ntrain:min(nstart+ntrain+ntest,n)]
-        dates_test = dates[nstart+ntrain:min(nstart+ntrain+ntest,n)]
-        timeyear_test = timeyear[nstart+ntrain:min(nstart+ntrain+ntest,n)]
+
+        y_test = y[nstart+ntrain:min(nstart+ntrain+ntest, n)]
+        x_test = x[nstart+ntrain:min(nstart+ntrain+ntest, n)]
+        pet_test = pet[nstart+ntrain:min(nstart+ntrain+ntest, n)]
+        dates_test = dates[nstart+ntrain:min(nstart+ntrain+ntest, n)]
+        timeyear_test = timeyear[nstart+ntrain:min(nstart+ntrain+ntest, n)]
+
         y_train = y[nstart:nstart+ntrain]
         x_train = x[nstart:nstart+ntrain]
         pet_train = pet[nstart:nstart+ntrain]
         dates_train = dates[nstart:nstart+ntrain]
         timeyear_train = timeyear[nstart:nstart+ntrain]
-        return pet_train, x_train, y_train, dates_train, timeyear_train, pet_test, x_test, y_test, dates_test, timeyear_test
+
+        return (pet_train, x_train, y_train, dates_train, timeyear_train,
+                pet_test, x_test, y_test, dates_test, timeyear_test)
 
     def get_design(self, pet, x, y, dates):
         """Compute the matrix that is used in the convolution to get the streamflow values.
-        
+
         Parameters
         ----------
         pet : array
@@ -320,34 +350,62 @@ class Dataset():
                     weights /= np.sum(weights)
                     X[i,j] =  np.sum(pet[t-ages_max_pet[jp]:t]*weights)
         return X
-        
 
     def get_GAMdesign(self, X, J):
         """Compute the matrix that is used in the convolution to get the streamflow values.
-        
+
+        This method constructs a matrix ('matJ') that encodes the convolution between
+        precipitation inputs and the model's temporal basis splines, as required by the
+        Generalized Additive Model (GAM) formulation used in the model.
+
+        Each layer of 'matJ' corresponds to one time step and combines:
+        - the precipitation history ('J'),
+        - the GAM model matrix ('A'), and
+        - the temporal basis splines ('basis_splines').
+
         Parameters
         ----------
         X : array
-            Design matrix of the GAM compute from the method 'get_design'. X has dimension: number of timepoints x number of features
+            Design matrix of the GAM compute from the method 'get_design'.
+            X has dimension: number of timepoints x number of features
         J : array
-            Precipitation time series.
+            The precipitation time series used as input to the convolution.
+
+        Returns
+        -------
+        matJ : ndarray of shape (Nt - m - init, n_basis, n_model_params)
+        The 3D tensor combining precipitation, basis splines, and GAM features.
+        This matrix is used later in the convolution to compute streamflow.
         """
         m = self.m
         init = self.init
         nfeat = self.basis_splines.shape[0]
-        Nt = len(J)-1
+        Nt = len(J) - 1
+
+        # Compute GAM model matrix
         A = self.gam._modelmat(X)
-        matJ = np.zeros((Nt-m-init,nfeat,A.shape[1]))
-        for i in range(m+init,Nt):
+
+        # Initialize 3D design tensor
+        matJ = np.zeros((Nt-m-init, nfeat, A.shape[1]))
+
+        # Build the convolutional tensor over time
+        for i in range(m+init, Nt):
             vec = np.flip(J[i-m+1:i+1])
-            mat = np.flip(A[i-m+1:i+1,:], axis=0)
-            # A: nt x nft     basis: L x 
-            matJ[i-m-init,:,:] =  np.sum(vec[None,:,None] * self.basis_splines[:,:,None] * mat[None,:,:], axis=1)
+            mat = np.flip(A[i-m+1:i+1, :], axis=0)
+            # A: nt x nft     basis: L x
+            matJ[i-m-init, :, :] = (
+                np.sum(vec[None, :, None] *
+                       self.basis_splines[:, :, None] *
+                       mat[None, :, :],
+                       axis=1)
+            )
+
         return matJ
 
     def load_data(self, save_folder, max_files=100, test_mode=False):
-        """Load the data that has been already proprecessed and saved using one of the 'save_batch' type methods.
-        
+        """Load the data that has been already proprecessed and saved using
+        one of the 'save_batch' type methods.
+
         Parameters
         ----------
         save_folder : str
